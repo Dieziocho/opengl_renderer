@@ -53,11 +53,11 @@ namespace OpenGL {
     //Set the screen clear color
     glClearColor(BACKGROUND_COLOR, 1.0f);
 
-    //Enable depth testing
-    glEnable(GL_DEPTH_TEST);
-
     //Enable antialiasing
     glEnable(GL_MULTISAMPLE);
+
+    //Set GL_LINES width
+    glLineWidth(3.0f);
 
     //Load textures upside down
     stbi_set_flip_vertically_on_load(true);

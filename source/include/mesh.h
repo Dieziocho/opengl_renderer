@@ -4,6 +4,7 @@
 #include "texture_class.h"
 #define MESH_TWO_SIDED (1 << 0)
 #define MESH_TRANSPARENT (1 << 1)
+#define MESH_LINES (1 << 2)
 
 class Mesh {
 public:
@@ -12,6 +13,7 @@ public:
 
   static Mesh Square();
 
+  static Mesh FromBuffer(VertexBuffer&& buffer);
   static Mesh FromData(Vector<Vertex2>& vertices, Vector<unsigned> indices, std::shared_ptr<const Texture> texture, unsigned flags);
   static Mesh FromData(Vector<Vertex3>& vertices, Vector<unsigned> indices, std::shared_ptr<const Texture> texture, unsigned flags);
   static Mesh FromTexture(const Texture& texture);

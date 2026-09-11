@@ -1,4 +1,5 @@
 #pragma once
+#include "mesh.h"
 #include "vertex.h"
 #include <vector>
 
@@ -15,3 +16,17 @@ namespace Square {
   });
 }
 
+namespace Lines {
+  inline Mesh makeMesh(std::vector<glm::vec3> vertices, std::vector<unsigned> indices){
+    return Mesh::FromBuffer(VertexBuffer(vertices, indices, GL_LINES));
+  }
+
+  inline Mesh makeMesh(std::vector<glm::vec3> vertices){
+    std::vector<unsigned> indices;
+    for(unsigned i = 0; i < (vertices.size() - 1); ++i){
+      indices.push_back(i);
+      indices.push_back(i + 1);
+    }
+    return makeMesh(vertices, indices);
+  }
+}
