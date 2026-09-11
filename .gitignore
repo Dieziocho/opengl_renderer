@@ -1,0 +1,13 @@
+build
+target
+resources
+
+*.json
+
+source/glad.c
+source/stb_image.c
+source/include/KHR
+source/include/assimp
+source/include/glad
+source/include/glm
+source/include/stb_image.h
