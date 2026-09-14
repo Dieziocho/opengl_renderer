@@ -34,12 +34,14 @@ Mesh Mesh::FromTexture(const Texture& texture){
   return mesh;
 }
 
-Mesh Mesh::FromTexture(Texture&& texture){
+Mesh Mesh::FromColor(unsigned color){
+  bool is_transparent = ~color & 0xff000000;
+
   Mesh mesh;
   mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(DataBuffer(Square::vertices, Square::indices)));
-  mesh.texture_owner = std::shared_ptr<Texture>(new Texture(std::move(texture)));
+  mesh.texture_owner = std::shared_ptr<Texture>(new Texture(Texture::Color(color)));
   mesh.texture = mesh.texture_owner.get();
-  mesh.flags = 0;
+  mesh.flags = is_transparent ? MESH_TRANSPARENT : 0;
+
   return mesh;
 }
-

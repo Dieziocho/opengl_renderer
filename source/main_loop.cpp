@@ -7,13 +7,9 @@
 #include "shapes.h"
 
 void Render::mainLoop(GLFWwindow* window){
-  Mesh red = Mesh::FromTexture(Texture::Color(0x800000ff));
-  Mesh green = Mesh::FromTexture(Texture::Color(0x8000ff00));
-  Mesh blue = Mesh::FromTexture(Texture::Color(0x80ff0000));
-
-  red.addFlags(MESH_TRANSPARENT);
-  green.addFlags(MESH_TRANSPARENT);
-  blue.addFlags(MESH_TRANSPARENT);
+  Mesh red = Mesh::FromColor(0xff0000ff);
+  Mesh green = Mesh::FromColor(0x8000ff00);
+  Mesh blue = Mesh::FromColor(0x80ff0000);
 
   std::vector<glm::vec3> vertices({
     {0.0f, 1.5f, 1.0f},

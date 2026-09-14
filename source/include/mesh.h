@@ -18,6 +18,7 @@ public:
   static Mesh FromData(Vector<Vertex3>& vertices, Vector<unsigned> indices, std::shared_ptr<const Texture> texture, unsigned flags);
   static Mesh FromTexture(const Texture& texture);
   static Mesh FromTexture(Texture&& texture);
+  static Mesh FromColor(unsigned color);
 
   void addFlags(unsigned n){
     flags |= n;

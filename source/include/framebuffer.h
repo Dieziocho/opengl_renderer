@@ -90,7 +90,6 @@ public:
   }
 
   static void bind(GLuint id){
-    if(id == current_framebuffer) return;
     glBindFramebuffer(GL_FRAMEBUFFER, id);
   }
 

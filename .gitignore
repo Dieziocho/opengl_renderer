@@ -3,6 +3,7 @@ target
 resources
 
 *.json
+.clangd
 
 source/glad.c
 source/stb_image.c
