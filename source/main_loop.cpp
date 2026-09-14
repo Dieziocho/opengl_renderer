@@ -1,10 +1,10 @@
-#include "mesh.h"
 #include "render.h"
+#include "mesh.h"
 #include "draw.h"
+#include "glm.h"
 #include "camera.h"
 #include "input.h"
 #include "shapes.h"
-#include "glm/ext/matrix_transform.hpp"
 
 void Render::mainLoop(GLFWwindow* window){
   Mesh red = Mesh::FromTexture(Texture::Color(0xff0000ff));
@@ -24,10 +24,10 @@ void Render::mainLoop(GLFWwindow* window){
   while(!glfwWindowShouldClose(window)){
     Camera::update();
 
-    drawMesh(red, Shaders::generic_2d, glm::translate(glm::mat4(1), {0.5,0,0}));
-    drawMesh(green, Shaders::generic_2d, glm::translate(glm::mat4(1), {0,0,1}));
-    drawMesh(blue, Shaders::generic_2d, glm::translate(glm::mat4(1), {0,0,-1}));
-    drawMesh(lines, Shaders::lines, glm::translate(glm::mat4(1), {0,0,4}));
+    drawMesh(red,   Shaders::generic_2d, translate(0.5,0,0));
+    drawMesh(green, Shaders::generic_2d, translate(0,0,1));
+    drawMesh(blue,  Shaders::generic_2d, translate(0,0,-1));
+    drawMesh(lines, Shaders::lines, translate(0,0,4));
 
     //Finish loop
     render(window);

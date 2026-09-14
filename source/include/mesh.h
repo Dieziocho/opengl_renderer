@@ -1,6 +1,6 @@
 #pragma once
 #include "shader_class.h"
-#include "vertex_buffer.h"
+#include "data_buffer.h"
 #include "texture_class.h"
 #define MESH_TWO_SIDED (1 << 0)
 #define MESH_TRANSPARENT (1 << 1)
@@ -13,7 +13,7 @@ public:
 
   static Mesh Square();
 
-  static Mesh FromBuffer(VertexBuffer&& buffer);
+  static Mesh FromBuffer(DataBuffer&& buffer);
   static Mesh FromData(Vector<Vertex2>& vertices, Vector<unsigned> indices, std::shared_ptr<const Texture> texture, unsigned flags);
   static Mesh FromData(Vector<Vertex3>& vertices, Vector<unsigned> indices, std::shared_ptr<const Texture> texture, unsigned flags);
   static Mesh FromTexture(const Texture& texture);
@@ -42,7 +42,7 @@ public:
   }
 
 private:
-  std::shared_ptr<const VertexBuffer> data;
+  std::shared_ptr<const DataBuffer> data;
   std::shared_ptr<const Texture> texture_owner;
   const Texture* texture;
   unsigned flags = 0;

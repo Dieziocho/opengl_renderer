@@ -18,7 +18,7 @@ namespace Square {
 
 namespace Lines {
   inline Mesh makeMesh(std::vector<glm::vec3> vertices, std::vector<unsigned> indices){
-    return Mesh::FromBuffer(VertexBuffer(vertices, indices, GL_LINES));
+    return Mesh::FromBuffer(DataBuffer(vertices, indices, GL_LINES));
   }
 
   inline Mesh makeMesh(std::vector<glm::vec3> vertices){
