@@ -90,6 +90,7 @@ public:
   }
 
   static void bind(GLuint id){
+    if(id == current_framebuffer) return;
     glBindFramebuffer(GL_FRAMEBUFFER, id);
   }
 
@@ -120,5 +121,7 @@ private:
     std::iota(ids.begin(), ids.end(), GL_COLOR_ATTACHMENT0);
     glDrawBuffers(ids.size(), ids.data());
   }
+
+  static inline GLuint current_framebuffer = -1;
 };
 

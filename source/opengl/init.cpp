@@ -14,7 +14,7 @@ namespace OpenGL {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); //Set glfw version to 4.3
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //Set profile to core, to get a smaller set of functions
-    glfwWindowHint(GLFW_DEPTH_BITS, 16);
+    glfwWindowHint(GLFW_DEPTH_BITS, 0);
   #ifndef NDEBUG
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
   #endif

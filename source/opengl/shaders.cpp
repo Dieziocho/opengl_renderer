@@ -21,7 +21,7 @@ namespace Shaders {
     };
 
     lines_3d = Shader("source/shaders/lines.vert", "source/shaders/lines.frag");
-    composite = Shader("source/shaders/generic_2d.vert", "source/shaders/composite.frag");
+    composite = Shader("source/shaders/stub_2d.vert", "source/shaders/composite.frag");
 
     solid_2d = Shader("source/shaders/generic_2d.vert", "source/shaders/solid.frag");
     transparent_2d = Shader("source/shaders/generic_2d.vert", "source/shaders/transparent.frag");
