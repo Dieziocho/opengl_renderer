@@ -23,21 +23,31 @@ public:
   }
 
   template<typename T>
-  void addAttribute(size_t stride = sizeof(T), size_t offset = 0, size_t count = 1){
+  void addAttribute(){
+    if constexpr(std::is_same_v<T, VertexData<2> >){
+      addBasicAttribute<float>(sizeof(VertexData<2>), offsetof(Vertex2, position), 2);
+      addBasicAttribute<float>(sizeof(VertexData<2>), offsetof(Vertex2, texture_coordinates), 2);
+    }
+    else if constexpr(std::is_same_v<T, VertexData<3> >){
+      addBasicAttribute<float>(sizeof(VertexData<3>), offsetof(Vertex3, position), 3);
+      addBasicAttribute<float>(sizeof(VertexData<3>), offsetof(Vertex3, texture_coordinates), 2);
+    }
+    else
+      addBasicAttribute<T>();
+  }
+
+  template<typename T>
+  void addBasicAttribute(size_t stride = sizeof(T), size_t offset = 0, size_t count = 1){
     glEnableVertexAttribArray(attribute_index);
     if(false);
-    else if constexpr(std::is_same_v<T, int>)      glVertexAttribIPointer(attribute_index++, count * 1, GL_INT, stride, (void*)offset);
-    else if constexpr(std::is_same_v<T, float>)     glVertexAttribPointer(attribute_index++, count * 1, GL_FLOAT, GL_FALSE, stride, (void*)offset);
-    else if constexpr(std::is_same_v<T, glm::vec2>) glVertexAttribPointer(attribute_index++, count * 2, GL_FLOAT, GL_FALSE, stride, (void*)offset);
-    else if constexpr(std::is_same_v<T, glm::vec3>) glVertexAttribPointer(attribute_index++, count * 3, GL_FLOAT, GL_FALSE, stride, (void*)offset);
-
-    else if constexpr(std::is_same_v<T, VertexData<2> >){
-      glVertexAttribPointer(attribute_index++, count * 2, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(VertexData<2>, position));
-      glVertexAttribPointer(attribute_index++, count * 2, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(VertexData<2>, texture_coordinates));
-    }
-
+    else if constexpr(std::is_same_v<T, int>)      glVertexAttribIPointer(attribute_index, count * 1, GL_INT, stride, (void*)offset);
+    else if constexpr(std::is_same_v<T, float>)     glVertexAttribPointer(attribute_index, count * 1, GL_FLOAT, GL_FALSE, stride, (void*)offset);
+    else if constexpr(std::is_same_v<T, glm::vec2>) glVertexAttribPointer(attribute_index, count * 2, GL_FLOAT, GL_FALSE, stride, (void*)offset);
+    else if constexpr(std::is_same_v<T, glm::vec3>) glVertexAttribPointer(attribute_index, count * 3, GL_FLOAT, GL_FALSE, stride, (void*)offset);
     else
       static_assert(false, "Invalid attribute type");
+
+    attribute_index++;
   }
 
   void bind() const {

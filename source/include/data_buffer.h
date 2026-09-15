@@ -19,7 +19,7 @@ public:
     vbo.load(data);
     ebo.load(indices);
 
-    vao.addAttribute<T>(sizeof(T), 0);
+    vao.addAttribute<T>();
 
     mode = mesh_mode;
   }

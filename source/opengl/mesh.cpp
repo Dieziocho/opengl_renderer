@@ -26,10 +26,29 @@ Mesh Mesh::FromData(Vector<Vertex2>& vertices, Vector<unsigned> indices, std::sh
   return mesh;
 }
 
+Mesh Mesh::FromData(Vector<Vertex3>& vertices, Vector<unsigned> indices, std::shared_ptr<const Texture> texture, unsigned flags){
+  GLenum mode = flags & MESH_LINES ? GL_LINES : GL_TRIANGLES;
+
+  Mesh mesh;
+  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(DataBuffer(vertices, indices, mode)));
+  mesh.texture_owner = texture;
+  mesh.texture = texture.get();
+  mesh.flags = flags;
+  return mesh;
+}
+
 Mesh Mesh::FromTexture(const Texture& texture){
   Mesh mesh;
   mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(DataBuffer(Square::vertices, Square::indices)));
   mesh.texture = &texture;
+  mesh.flags = 0;
+  return mesh;
+}
+
+Mesh Mesh::FromTexture(Texture&& texture){
+  Mesh mesh;
+  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(DataBuffer(Square::vertices, Square::indices)));
+  mesh.texture = new Texture(std::move(texture));
   mesh.flags = 0;
   return mesh;
 }
