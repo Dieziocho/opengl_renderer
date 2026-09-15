@@ -2,6 +2,7 @@
 #include "assimp/mesh.h"
 #include "bone_info.h"
 #include "data_buffer.h"
+#include "glm/ext/matrix_transform.hpp"
 #include "texture_class.h"
 #include <assimp/Importer.hpp>
 #include <assimp/material.h>
@@ -97,7 +98,7 @@ std::shared_ptr<const Texture> loadMaterialTexture(const aiScene& scene, const a
   return texture;
 }
 
-void loadMeshes(Model& model, const aiScene& scene){
+void loadMeshes(Model& model, const aiScene& scene, const glm::mat4& input_transform){
   auto* meshes = scene.mMeshes;
   size_t count = scene.mNumMeshes;
   model.meshes.reserve(scene.mNumMeshes);
@@ -114,7 +115,7 @@ void loadMeshes(Model& model, const aiScene& scene){
     vertices.reserve(mesh.mNumVertices);
     for(unsigned i = 0; i < mesh.mNumVertices; ++i)
       vertices.emplace_back(Vertex3{
-        convertVertex(mesh.mVertices[i]),
+        glm::vec4(convertVertex(mesh.mVertices[i]), 1.0f) * input_transform,
         has_texture_coords
           ? convertVertex(mesh.mTextureCoords[0][i])
           : glm::vec2{0, 0}
@@ -166,7 +167,7 @@ void loadInstances(Model& model, const aiNode* node, glm::mat4 transform = glm::
     loadInstances(model, node->mChildren[i], transform);
 }
 
-unsigned loadBones(Model& model, const aiScene& scene){
+unsigned loadBones(Model& model, const aiScene& scene, const glm::mat4& input_transform){
   size_t bone_count = model.bone_map.size();
   model.bones.resize(bone_count);
 
@@ -175,7 +176,7 @@ unsigned loadBones(Model& model, const aiScene& scene){
     const aiNode* node = scene.mRootNode->findBoneNode(bone);
     if(!bone || !node) continue;
 
-    model.bones[bone_id].offset = convertMatrix(bone->mOffsetMatrix);
+    model.bones[bone_id].offset = input_transform * convertMatrix(bone->mOffsetMatrix);
     for(unsigned i = 0; i < node->mNumChildren; ++i){
       std::string child_name = node->mChildren[i]->mName.C_Str();
       if(child_name.ends_with("_end")) continue;
@@ -219,10 +220,14 @@ namespace Assimp {
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
       throw std::runtime_error(std::format("Failed to load file {}: {}", file_path.string(), importer.GetErrorString()));
 
+    glm::mat4 input_transform =
+      file_path.extension() == ".fbx" ?
+      glm::scale(glm::mat4(1), glm::vec3(1) * 0.01f) : 1;
+
     Model model;
-    loadMeshes(model, *scene);
+    loadMeshes(model, *scene, input_transform);
     loadInstances(model, scene->mRootNode);
-    loadBones(model, *scene);
+    loadBones(model, *scene, input_transform);
     model.transform = 1;
 
     importer.FreeScene();
@@ -230,5 +235,3 @@ namespace Assimp {
     return model;
   }
 }
-
-
