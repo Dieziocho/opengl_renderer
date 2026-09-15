@@ -1,5 +1,6 @@
 #pragma once
 #include "base_buffer.h"
+#include "bone_info.h"
 #include "glm/ext/vector_float2.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "vertex.h"
@@ -31,6 +32,10 @@ public:
     else if constexpr(std::is_same_v<T, VertexData<3> >){
       addBasicAttribute<float>(sizeof(VertexData<3>), offsetof(Vertex3, position), 3);
       addBasicAttribute<float>(sizeof(VertexData<3>), offsetof(Vertex3, texture_coordinates), 2);
+    }
+    else if constexpr(std::is_same_v<T, BoneVertexInfo>){
+      addBasicAttribute<float>(sizeof(BoneVertexInfo), offsetof(BoneVertexInfo, bone_ids), 4);
+      addBasicAttribute<float>(sizeof(BoneVertexInfo), offsetof(BoneVertexInfo, weights), 4);
     }
     else
       addBasicAttribute<T>();

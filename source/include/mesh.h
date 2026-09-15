@@ -13,7 +13,7 @@ public:
 
   static Mesh Square();
 
-  static Mesh FromBuffer(DataBuffer&& buffer);
+  static Mesh FromBuffer(DataBuffer&& buffer, std::shared_ptr<const Texture> texture, unsigned flags);
   static Mesh FromData(Vector<Vertex2>& vertices, Vector<unsigned> indices, std::shared_ptr<const Texture> texture, unsigned flags);
   static Mesh FromData(Vector<Vertex3>& vertices, Vector<unsigned> indices, std::shared_ptr<const Texture> texture, unsigned flags);
   static Mesh FromTexture(const Texture& texture);

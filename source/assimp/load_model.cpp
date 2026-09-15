@@ -1,5 +1,7 @@
 #include "assimp.h"
 #include "assimp/mesh.h"
+#include "bone_info.h"
+#include "data_buffer.h"
 #include "texture_class.h"
 #include <assimp/Importer.hpp>
 #include <assimp/material.h>
@@ -26,6 +28,43 @@ glm::mat4 operator*(const glm::mat4& left, const aiMatrix4x4& m){
 
 glm::vec3 convertVertex(const aiVector3D& vertex){
   return {vertex.x, vertex.y, vertex.z};
+}
+
+void recollectBoneNames(Model& model, const aiMesh& mesh){
+  for(unsigned i = 0; i < mesh.mNumBones; ++i){
+    std::string bone_name = mesh.mBones[i]->mName.C_Str();
+    if(bone_name.ends_with("_end")) continue;
+    if(model.bone_map.find(bone_name) == model.bone_map.end()){
+      model.bone_map[bone_name] = model.bone_map.size();
+    }
+  }
+}
+
+void setVertexBoneData(BoneVertexInfo& bone_info, int boneID, float weight){
+  for(int i = 0; i < BONE_COUNT; ++i){
+    if(bone_info.bone_ids[i] < 0){
+      bone_info.weights[i] = weight;
+      bone_info.bone_ids[i] = boneID;
+      break;
+    }
+  }
+}
+
+void loadVertexBoneweights(Model& model, std::vector<BoneVertexInfo>& bone_info, aiMesh& mesh){
+  for(unsigned i = 0; i < mesh.mNumBones; ++i){
+    aiString& ai_bone_name = mesh.mBones[i]->mName;
+    std::string bone_name = ai_bone_name.C_Str();
+
+    unsigned bone_id = model.bone_map[bone_name];
+    auto* weights = mesh.mBones[i]->mWeights;
+    unsigned weight_count = mesh.mBones[i]->mNumWeights;
+    for(auto& weight : std::span(weights, weight_count)){
+      unsigned vertex_id = weight.mVertexId;
+      float weight_value = weight.mWeight;
+      assert(vertex_id <= bone_info.size());
+      setVertexBoneData(bone_info[vertex_id], bone_id, weight_value);
+    }
+  }
 }
 
 Texture* loadTexture(const char* texture_name, const aiScene& scene){
@@ -88,6 +127,11 @@ void loadMeshes(Model& model, const aiScene& scene){
       for(auto& index : std::span(face.mIndices, face.mNumIndices))
         indices.push_back(index);
 
+    //Get bone names via mesh reference
+    recollectBoneNames(model, mesh);
+    std::vector<BoneVertexInfo> bone_info(vertices.size());
+    loadVertexBoneweights(model, bone_info, mesh);
+
     //Load texture
     auto texture = loadMaterialTexture(scene, material, textures);
 
@@ -104,7 +148,10 @@ void loadMeshes(Model& model, const aiScene& scene){
       else if(alpha_mode == aiString("MASK")){}
     }
 
-    model.meshes.emplace_back(Mesh::FromData(vertices, indices, texture, flags));
+    DataBuffer buffer(vertices, indices, GL_TRIANGLES);
+    buffer.attach(bone_info);
+
+    model.meshes.emplace_back(Mesh::FromBuffer(std::move(buffer), texture, flags));
   }
 }
 
@@ -117,6 +164,33 @@ void loadInstances(Model& model, const aiNode* node, glm::mat4 transform = glm::
 
   for(unsigned i = 0; i < node->mNumChildren; ++i)
     loadInstances(model, node->mChildren[i], transform);
+}
+
+unsigned loadBones(Model& model, const aiScene& scene){
+  size_t bone_count = model.bone_map.size();
+  model.bones.resize(bone_count);
+
+  for(auto& [bone_name, bone_id] : model.bone_map){
+    const aiBone* bone = scene.findBone(aiString(bone_name.data()));
+    const aiNode* node = scene.mRootNode->findBoneNode(bone);
+    if(!bone || !node) continue;
+
+    model.bones[bone_id].offset = convertMatrix(bone->mOffsetMatrix);
+    for(unsigned i = 0; i < node->mNumChildren; ++i){
+      std::string child_name = node->mChildren[i]->mName.C_Str();
+      if(child_name.ends_with("_end")) continue;
+
+      unsigned child_id = model.bone_map[child_name];
+      model.bones[child_id].parent = bone_id;
+      model.bones[bone_id].children.push_back(child_id);
+    }
+  }
+
+  for(unsigned i = 0; i < model.bones.size(); ++i){
+    Bone& bone = model.bones[i];
+    if(bone.parent == -1u) return i;
+  }
+  return -1;
 }
 
 namespace Assimp {
@@ -148,6 +222,7 @@ namespace Assimp {
     Model model;
     loadMeshes(model, *scene);
     loadInstances(model, scene->mRootNode);
+    loadBones(model, *scene);
     model.transform = 1;
 
     importer.FreeScene();

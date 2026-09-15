@@ -1,7 +1,6 @@
 #pragma once
 #include "glm/ext/vector_float2.hpp"
 #include <cstddef>
-#define BONE_COUNT glm::ivec4::length()
 
 template<size_t count>
 struct VertexData {

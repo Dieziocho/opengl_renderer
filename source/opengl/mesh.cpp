@@ -9,9 +9,12 @@ Mesh Mesh::Square(){
   return mesh;
 }
 
-Mesh Mesh::FromBuffer(DataBuffer&& buffer){
+Mesh Mesh::FromBuffer(DataBuffer&& buffer, std::shared_ptr<const Texture> texture, unsigned flags){
   Mesh mesh;
   mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(std::move(buffer)));
+  mesh.texture_owner = texture;
+  mesh.texture = texture.get();
+  mesh.flags = flags;
   return mesh;
 }
 

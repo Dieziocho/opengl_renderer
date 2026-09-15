@@ -15,13 +15,19 @@ public:
   DataBuffer(Vector<T>& data, Vector<unsigned> indices, GLenum mesh_mode = GL_TRIANGLES){
     index_count = indices.size();
 
-    vao.bind();
-    vbo.load(data);
+    attach(data);
     ebo.load(indices);
 
-    vao.addAttribute<T>();
-
     mode = mesh_mode;
+  }
+
+  template<typename T>
+  void attach(Vector<T>& data){
+    vao.bind();
+    vbos.push_back({});
+    vbos.rbegin()->load(data);
+
+    vao.addAttribute<T>();
   }
 
   void bind() const {
@@ -37,8 +43,8 @@ public:
   }
 
 private:
+  std::vector<VBO> vbos;
   VAO vao;
-  VBO vbo;
   EBO ebo;
   GLenum mode;
 
