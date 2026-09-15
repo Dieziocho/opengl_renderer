@@ -149,7 +149,7 @@ void loadMeshes(Model& model, const aiScene& scene, const glm::mat4& input_trans
       else if(alpha_mode == aiString("MASK")){}
     }
 
-    DataBuffer buffer(vertices, indices, GL_TRIANGLES);
+    DataBuffer buffer(vertices, indices);
     buffer.attach(bone_info);
 
     model.meshes.emplace_back(Mesh::FromBuffer(std::move(buffer), texture, flags));

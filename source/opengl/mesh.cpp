@@ -19,10 +19,8 @@ Mesh Mesh::FromBuffer(DataBuffer&& buffer, std::shared_ptr<const Texture> textur
 }
 
 Mesh Mesh::FromData(Vector<Vertex2>& vertices, Vector<unsigned> indices, std::shared_ptr<const Texture> texture, unsigned flags){
-  GLenum mode = flags & MESH_LINES ? GL_LINES : GL_TRIANGLES;
-
   Mesh mesh;
-  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(DataBuffer(vertices, indices, mode)));
+  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(DataBuffer(vertices, indices)));
   mesh.texture_owner = texture;
   mesh.texture = texture.get();
   mesh.flags = flags;
@@ -30,10 +28,8 @@ Mesh Mesh::FromData(Vector<Vertex2>& vertices, Vector<unsigned> indices, std::sh
 }
 
 Mesh Mesh::FromData(Vector<Vertex3>& vertices, Vector<unsigned> indices, std::shared_ptr<const Texture> texture, unsigned flags){
-  GLenum mode = flags & MESH_LINES ? GL_LINES : GL_TRIANGLES;
-
   Mesh mesh;
-  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(DataBuffer(vertices, indices, mode)));
+  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(DataBuffer(vertices, indices)));
   mesh.texture_owner = texture;
   mesh.texture = texture.get();
   mesh.flags = flags;

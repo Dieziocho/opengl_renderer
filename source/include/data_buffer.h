@@ -12,13 +12,11 @@ public:
   DataBuffer(DataBuffer&&) = default;
 
   template<typename T>
-  DataBuffer(Vector<T>& data, Vector<unsigned> indices, GLenum mesh_mode = GL_TRIANGLES){
+  DataBuffer(Vector<T>& data, Vector<unsigned> indices){
     index_count = indices.size();
 
     attach(data);
     ebo.load(indices);
-
-    mode = mesh_mode;
   }
 
   template<typename T>
@@ -38,15 +36,10 @@ public:
     return index_count;
   }
 
-  size_t getMode() const {
-    return mode;
-  }
-
 private:
   std::vector<VBO> vbos;
   VAO vao;
   EBO ebo;
-  GLenum mode;
 
   size_t index_count = 0;
 };

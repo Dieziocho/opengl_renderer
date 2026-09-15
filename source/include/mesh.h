@@ -39,7 +39,7 @@ public:
   }
 
   unsigned getMode() const {
-    return data->getMode();
+    return flags & MESH_LINES ? GL_LINES : GL_TRIANGLES;
   }
 
 private:
