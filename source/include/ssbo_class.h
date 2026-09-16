@@ -1,5 +1,6 @@
 #pragma once
-#include "base_buffer.hpp"
+#include "base_buffer.h"
+#include <vector>
 
 struct SSBODeleter {
   void operator()(GLuint id) const {
@@ -23,7 +24,7 @@ public:
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, id);
   }
 
-  void bindBase(GLuint base) const {
+  void bindBase(unsigned base) const {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, base, id);
   }
 

@@ -98,7 +98,7 @@ std::shared_ptr<const Texture> loadMaterialTexture(const aiScene& scene, const a
   return texture;
 }
 
-void loadMeshes(Model& model, const aiScene& scene, const glm::mat4& input_transform){
+void loadMeshes(Model& model, const aiScene& scene){
   auto* meshes = scene.mMeshes;
   size_t count = scene.mNumMeshes;
   model.meshes.reserve(scene.mNumMeshes);
@@ -115,7 +115,7 @@ void loadMeshes(Model& model, const aiScene& scene, const glm::mat4& input_trans
     vertices.reserve(mesh.mNumVertices);
     for(unsigned i = 0; i < mesh.mNumVertices; ++i)
       vertices.emplace_back(Vertex3{
-        glm::vec4(convertVertex(mesh.mVertices[i]), 1.0f) * input_transform,
+        glm::vec4(convertVertex(mesh.mVertices[i]), 1.0f),
         has_texture_coords
           ? convertVertex(mesh.mTextureCoords[0][i])
           : glm::vec2{0, 0}
@@ -167,7 +167,7 @@ void loadInstances(Model& model, const aiNode* node, glm::mat4 transform = glm::
     loadInstances(model, node->mChildren[i], transform);
 }
 
-unsigned loadBones(Model& model, const aiScene& scene, const glm::mat4& input_transform){
+unsigned loadBones(Model& model, const aiScene& scene){
   size_t bone_count = model.bone_map.size();
   model.bones.resize(bone_count);
 
@@ -176,7 +176,7 @@ unsigned loadBones(Model& model, const aiScene& scene, const glm::mat4& input_tr
     const aiNode* node = scene.mRootNode->findBoneNode(bone);
     if(!bone || !node) continue;
 
-    model.bones[bone_id].offset = input_transform * convertMatrix(bone->mOffsetMatrix);
+    model.bones[bone_id].offset = convertMatrix(bone->mOffsetMatrix);
     for(unsigned i = 0; i < node->mNumChildren; ++i){
       std::string child_name = node->mChildren[i]->mName.C_Str();
       if(child_name.ends_with("_end")) continue;
@@ -225,9 +225,9 @@ namespace Assimp {
       glm::scale(glm::mat4(1), glm::vec3(1) * 0.01f) : 1;
 
     Model model;
-    loadMeshes(model, *scene, input_transform);
-    loadInstances(model, scene->mRootNode);
-    loadBones(model, *scene, input_transform);
+    loadMeshes(model, *scene);
+    loadInstances(model, scene->mRootNode, input_transform);
+    loadBones(model, *scene);
     model.transform = 1;
 
     importer.FreeScene();

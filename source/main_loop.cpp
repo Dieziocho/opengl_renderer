@@ -4,14 +4,31 @@
 #include "draw.h"
 #include "assimp.h"
 #include "shaders.h"
+#include "ssbo_class.h"
+#include "glm.h"
+
+void updateBones(unsigned id, Model& model, std::vector<glm::mat4>& transforms, glm::mat4 accum = 1){
+  transforms[id] = accum * glm::inverse(model.bones[id].offset) * transforms[id] * model.bones[id].offset;
+
+  for(auto child : model.bones[id].children)
+    updateBones(child, model, transforms, transforms[id]);
+};
 
 void Render::mainLoop(GLFWwindow* window){
   Model model = Assimp::loadModel("resources/Helios/helios.fbx");
 
+  SSBO ssbo;
+  ssbo.bindBase(0);
+  std::vector<glm::mat4> transforms(model.bones.size());
+
   while(!glfwWindowShouldClose(window)){
     Camera::update();
 
-    drawModel(model, Shaders::generic_3d);
+    std::fill(transforms.begin(), transforms.end(), rotate(glfwGetTime(), {1,0,0}));
+    updateBones(0, model, transforms);
+    ssbo.setData(transforms);
+
+    drawModel(model, Shaders::animated_3d);
 
     //Finish loop
     render(window);

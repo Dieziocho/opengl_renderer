@@ -16,3 +16,7 @@ inline constexpr glm::mat4 scale(float x, float y, float z){
 inline constexpr glm::mat4 translate(const glm::vec3& vec){
   return glm::translate(glm::mat4(1), vec);
 }
+
+inline constexpr glm::mat4 rotate(float angle, const glm::vec3& vec){
+  return glm::rotate(glm::mat4(1), angle, vec);
+}
