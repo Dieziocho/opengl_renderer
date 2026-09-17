@@ -19,6 +19,7 @@ void Render::mainLoop(GLFWwindow* window){
 
   SSBO ssbo;
   ssbo.bindBase(0);
+  ssbo.reserve<glm::mat4>(model.bones.size());
   std::vector<glm::mat4> transforms(model.bones.size());
 
   while(!glfwWindowShouldClose(window)){
@@ -26,7 +27,7 @@ void Render::mainLoop(GLFWwindow* window){
 
     std::fill(transforms.begin(), transforms.end(), rotate(glfwGetTime(), {1,0,0}));
     updateBones(0, model, transforms);
-    ssbo.setData(transforms);
+    ssbo.subData(transforms);
 
     drawModel(model, Shaders::animated_3d);
 
