@@ -20,4 +20,7 @@ struct Model {
 
   std::map<std::string, unsigned> bone_map;
   std::vector<Bone> bones;
+
+  unsigned model_id = 0;
+  inline static unsigned current_model_id = 1;
 };

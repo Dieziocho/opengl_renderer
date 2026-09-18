@@ -16,9 +16,35 @@ namespace Square {
   });
 }
 
+namespace Cube {
+  inline std::vector<glm::vec3> positions({
+    glm::vec3(-1.0f, -1.0f, -1.0f),
+    glm::vec3(+1.0f, -1.0f, -1.0f),
+    glm::vec3(+1.0f, +1.0f, -1.0f),
+    glm::vec3(-1.0f, +1.0f, -1.0f),
+    glm::vec3(-1.0f, -1.0f, +1.0f),
+    glm::vec3(+1.0f, -1.0f, +1.0f),
+    glm::vec3(+1.0f, +1.0f, +1.0f),
+    glm::vec3(-1.0f, +1.0f, +1.0f),
+  });
+
+  inline std::vector<unsigned> indices({
+    0, 1, 2, 2, 3, 0,
+    4, 6, 5, 6, 4, 7,
+    4, 0, 3, 3, 7, 4,
+    1, 5, 6, 6, 2, 1,
+    4, 5, 1, 1, 0, 4,
+    3, 2, 6, 6, 7, 3,
+  });
+}
+
 namespace Lines {
   inline Mesh makeMesh(std::vector<glm::vec3> vertices, std::vector<unsigned> indices){
-    return Mesh::FromBuffer(DataBuffer(vertices, indices), nullptr, MESH_LINES);
+    DataBuffer buffer;
+    buffer.attach(0, vertices);
+    buffer.setIndices(indices);
+
+    return Mesh::FromBuffer(std::move(buffer), nullptr, MESH_LINES);
   }
 
   inline Mesh makeMesh(std::vector<glm::vec3> vertices){

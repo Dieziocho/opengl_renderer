@@ -12,20 +12,19 @@ public:
   DataBuffer(DataBuffer&&) = default;
 
   template<typename T>
-  DataBuffer(Vector<T>& data, Vector<unsigned> indices){
-    index_count = indices.size();
-
-    attach(data);
-    ebo.load(indices);
-  }
-
-  template<typename T>
-  void attach(Vector<T>& data){
+  void attach(unsigned index, Vector<T>& data){
     vao.bind();
     vbos.push_back({});
     vbos.rbegin()->load(data);
 
-    vao.addAttribute<T>();
+    vao.setAttribute<T>(index);
+  }
+
+  void setIndices(Vector<unsigned> indices){
+    index_count = indices.size();
+
+    vao.bind();
+    ebo.load(indices);
   }
 
   void bind() const {

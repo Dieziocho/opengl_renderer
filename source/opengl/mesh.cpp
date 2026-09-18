@@ -2,8 +2,12 @@
 #include "shapes.h"
 
 Mesh Mesh::Square(){
+  DataBuffer buffer;
+  buffer.attach(0, Square::vertices);
+  buffer.setIndices(Square::indices);
+
   Mesh mesh;
-  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(Square::vertices, Square::indices));
+  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(std::move(buffer)));
   mesh.texture = nullptr;
   mesh.flags = 0;
   return mesh;
@@ -19,8 +23,12 @@ Mesh Mesh::FromBuffer(DataBuffer&& buffer, std::shared_ptr<const Texture> textur
 }
 
 Mesh Mesh::FromData(Vector<Vertex2>& vertices, Vector<unsigned> indices, std::shared_ptr<const Texture> texture, unsigned flags){
+  DataBuffer buffer;
+  buffer.attach(0, vertices);
+  buffer.setIndices(indices);
+
   Mesh mesh;
-  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(DataBuffer(vertices, indices)));
+  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(std::move(buffer)));
   mesh.texture_owner = texture;
   mesh.texture = texture.get();
   mesh.flags = flags;
@@ -28,8 +36,12 @@ Mesh Mesh::FromData(Vector<Vertex2>& vertices, Vector<unsigned> indices, std::sh
 }
 
 Mesh Mesh::FromData(Vector<Vertex3>& vertices, Vector<unsigned> indices, std::shared_ptr<const Texture> texture, unsigned flags){
+  DataBuffer buffer;
+  buffer.attach(0, vertices);
+  buffer.setIndices(indices);
+
   Mesh mesh;
-  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(DataBuffer(vertices, indices)));
+  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(std::move(buffer)));
   mesh.texture_owner = texture;
   mesh.texture = texture.get();
   mesh.flags = flags;
@@ -37,16 +49,24 @@ Mesh Mesh::FromData(Vector<Vertex3>& vertices, Vector<unsigned> indices, std::sh
 }
 
 Mesh Mesh::FromTexture(const Texture& texture){
+  DataBuffer buffer;
+  buffer.attach(0, Square::vertices);
+  buffer.setIndices(Square::indices);
+
   Mesh mesh;
-  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(DataBuffer(Square::vertices, Square::indices)));
+  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(std::move(buffer)));
   mesh.texture = &texture;
   mesh.flags = 0;
   return mesh;
 }
 
 Mesh Mesh::FromTexture(Texture&& texture){
+  DataBuffer buffer;
+  buffer.attach(0, Square::vertices);
+  buffer.setIndices(Square::indices);
+
   Mesh mesh;
-  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(DataBuffer(Square::vertices, Square::indices)));
+  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(std::move(buffer)));
   mesh.texture = new Texture(std::move(texture));
   mesh.flags = 0;
   return mesh;
@@ -55,8 +75,12 @@ Mesh Mesh::FromTexture(Texture&& texture){
 Mesh Mesh::FromColor(unsigned color){
   bool is_transparent = ~color & 0xff000000;
 
+  DataBuffer buffer;
+  buffer.attach(0, Square::vertices);
+  buffer.setIndices(Square::indices);
+
   Mesh mesh;
-  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(DataBuffer(Square::vertices, Square::indices)));
+  mesh.data = std::shared_ptr<DataBuffer>(new DataBuffer(std::move(buffer)));
   mesh.texture_owner = std::shared_ptr<Texture>(new Texture(Texture::Color(color)));
   mesh.texture = mesh.texture_owner.get();
   mesh.flags = is_transparent ? MESH_TRANSPARENT : 0;

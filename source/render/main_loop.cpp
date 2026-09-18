@@ -4,6 +4,7 @@
 #include "draw.h"
 #include "assimp.h"
 #include "shaders.h"
+#include "shapes.h"
 #include "ssbo_class.h"
 #include "glm.h"
 
@@ -16,6 +17,7 @@ void updateBones(unsigned id, Model& model, std::vector<glm::mat4>& transforms, 
 
 void Render::mainLoop(GLFWwindow* window){
   Model model = Assimp::loadModel("resources/Helios/helios.fbx");
+  Mesh lines = Lines::makeMesh(Cube::positions);
 
   SSBO ssbo;
   ssbo.bindBase(0);
@@ -30,6 +32,7 @@ void Render::mainLoop(GLFWwindow* window){
     ssbo.subData(transforms);
 
     drawModel(model, Shaders::animated_3d);
+    drawMesh(lines, Shaders::lines, translate(5,0,0));
 
     //Finish loop
     render(window);

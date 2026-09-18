@@ -1,6 +1,5 @@
 #include "assimp.h"
 #include "assimp/mesh.h"
-#include "bone_info.h"
 #include "data_buffer.h"
 #include "glm/ext/matrix_transform.hpp"
 #include "texture_class.h"
@@ -41,17 +40,17 @@ void recollectBoneNames(Model& model, const aiMesh& mesh){
   }
 }
 
-void setVertexBoneData(BoneVertexInfo& bone_info, int boneID, float weight){
+void setVertexBoneData(BoneData& bone_data, int boneID, float weight){
   for(int i = 0; i < BONE_COUNT; ++i){
-    if(bone_info.bone_ids[i] < 0){
-      bone_info.weights[i] = weight;
-      bone_info.bone_ids[i] = boneID;
+    if(bone_data.bone_ids[i] < 0){
+      bone_data.weights[i] = weight;
+      bone_data.bone_ids[i] = boneID;
       break;
     }
   }
 }
 
-void loadVertexBoneweights(Model& model, std::vector<BoneVertexInfo>& bone_info, aiMesh& mesh){
+void loadVertexBoneweights(Model& model, std::vector<BoneData>& bone_data, aiMesh& mesh){
   for(unsigned i = 0; i < mesh.mNumBones; ++i){
     aiString& ai_bone_name = mesh.mBones[i]->mName;
     std::string bone_name = ai_bone_name.C_Str();
@@ -62,8 +61,8 @@ void loadVertexBoneweights(Model& model, std::vector<BoneVertexInfo>& bone_info,
     for(auto& weight : std::span(weights, weight_count)){
       unsigned vertex_id = weight.mVertexId;
       float weight_value = weight.mWeight;
-      assert(vertex_id <= bone_info.size());
-      setVertexBoneData(bone_info[vertex_id], bone_id, weight_value);
+      assert(vertex_id <= bone_data.size());
+      setVertexBoneData(bone_data[vertex_id], bone_id, weight_value);
     }
   }
 }
@@ -130,8 +129,8 @@ void loadMeshes(Model& model, const aiScene& scene){
 
     //Get bone names via mesh reference
     recollectBoneNames(model, mesh);
-    std::vector<BoneVertexInfo> bone_info(vertices.size());
-    loadVertexBoneweights(model, bone_info, mesh);
+    std::vector<BoneData> bone_data(vertices.size());
+    loadVertexBoneweights(model, bone_data, mesh);
 
     //Load texture
     auto texture = loadMaterialTexture(scene, material, textures);
@@ -149,8 +148,10 @@ void loadMeshes(Model& model, const aiScene& scene){
       else if(alpha_mode == aiString("MASK")){}
     }
 
-    DataBuffer buffer(vertices, indices);
-    buffer.attach(bone_info);
+    DataBuffer buffer;
+    buffer.attach(0, vertices);
+    buffer.attach(2, bone_data);
+    buffer.setIndices(indices);
 
     model.meshes.emplace_back(Mesh::FromBuffer(std::move(buffer), texture, flags));
   }
@@ -229,6 +230,7 @@ namespace Assimp {
     loadInstances(model, scene->mRootNode, input_transform);
     loadBones(model, *scene);
     model.transform = 1;
+    model.model_id = Model::current_model_id++;
 
     importer.FreeScene();
 
