@@ -1,16 +1,10 @@
 #pragma once
 #include "mesh.h"
-#include <map>
+#include "ssbo_class.h"
 
 struct MeshInstance {
   unsigned index;
   glm::mat4 transformation;
-};
-
-struct Bone {
-  unsigned parent = -1u;
-  std::vector<unsigned> children;
-  glm::mat4 offset;
 };
 
 struct Model {
@@ -18,9 +12,24 @@ struct Model {
   std::vector<MeshInstance> mesh_instances;
   glm::mat4 transform;
 
-  std::map<std::string, unsigned> bone_map;
-  std::vector<Bone> bones;
+  Bones bones;
+  SSBO bones_transforms;
 
   unsigned model_id = 0;
   inline static unsigned current_model_id = 1;
+
+  void updateBones(){
+    std::vector<glm::mat4> result(bones.size());
+    updateBones(result);
+    bones_transforms.subData(result);
+    bones_transforms.bind();
+    bones_transforms.bindBase(0);
+  }
+
+  void updateBones(std::vector<glm::mat4>& output, unsigned id = 0, const glm::mat4& parent = 1){
+    output[id] = parent * glm::inverse(bones[id].offset) * bones[id].getTransform() * bones[id].offset;
+
+    for(auto child : bones[id].children)
+      updateBones(output, child, output[id]);
+  }
 };

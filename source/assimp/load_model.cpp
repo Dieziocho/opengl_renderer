@@ -34,8 +34,8 @@ void recollectBoneNames(Model& model, const aiMesh& mesh){
   for(unsigned i = 0; i < mesh.mNumBones; ++i){
     std::string bone_name = mesh.mBones[i]->mName.C_Str();
     if(bone_name.ends_with("_end")) continue;
-    if(model.bone_map.find(bone_name) == model.bone_map.end()){
-      model.bone_map[bone_name] = model.bone_map.size();
+    if(model.bones.find(bone_name) == model.bones.end()){
+      model.bones.registerBone(bone_name);
     }
   }
 }
@@ -55,7 +55,7 @@ void loadVertexBoneweights(Model& model, std::vector<BoneData>& bone_data, aiMes
     aiString& ai_bone_name = mesh.mBones[i]->mName;
     std::string bone_name = ai_bone_name.C_Str();
 
-    unsigned bone_id = model.bone_map[bone_name];
+    unsigned bone_id = model.bones.getId(bone_name);
     auto* weights = mesh.mBones[i]->mWeights;
     unsigned weight_count = mesh.mBones[i]->mNumWeights;
     for(auto& weight : std::span(weights, weight_count)){
@@ -169,10 +169,11 @@ void loadInstances(Model& model, const aiNode* node, glm::mat4 transform = glm::
 }
 
 unsigned loadBones(Model& model, const aiScene& scene){
-  size_t bone_count = model.bone_map.size();
-  model.bones.resize(bone_count);
+  size_t bone_count = model.bones.size();
+  model.bones.resize();
+  model.bones_transforms.reserve<glm::mat4>(bone_count);
 
-  for(auto& [bone_name, bone_id] : model.bone_map){
+  for(auto& [bone_name, bone_id] : model.bones.map()){
     const aiBone* bone = scene.findBone(aiString(bone_name.data()));
     const aiNode* node = scene.mRootNode->findBoneNode(bone);
     if(!bone || !node) continue;
@@ -182,7 +183,7 @@ unsigned loadBones(Model& model, const aiScene& scene){
       std::string child_name = node->mChildren[i]->mName.C_Str();
       if(child_name.ends_with("_end")) continue;
 
-      unsigned child_id = model.bone_map[child_name];
+      unsigned child_id = model.bones.getId(child_name);
       model.bones[child_id].parent = bone_id;
       model.bones[bone_id].children.push_back(child_id);
     }
@@ -195,45 +196,41 @@ unsigned loadBones(Model& model, const aiScene& scene){
   return -1;
 }
 
-namespace Assimp {
-  thread_local Assimp::Importer importer;
+Model Assimp::loadModel(const Path& file_path, unsigned flags){
+  if(!exists(file_path)) throw std::runtime_error(file_path.string() + ": does not exist");
 
-  Model loadModel(const Path& file_path, unsigned flags){
-    if(!exists(file_path)) throw std::runtime_error(file_path.string() + ": does not exist");
+  importer.SetPropertyInteger(
+    AI_CONFIG_PP_RVC_FLAGS,
+    aiComponent_CAMERAS |
+    aiComponent_COLORS |
+    aiComponent_LIGHTS |
+    aiComponent_TANGENTS_AND_BITANGENTS
+    );
 
-    importer.SetPropertyInteger(
-      AI_CONFIG_PP_RVC_FLAGS,
-      aiComponent_CAMERAS |
-      aiComponent_COLORS |
-      aiComponent_LIGHTS |
-      aiComponent_TANGENTS_AND_BITANGENTS
-      );
+  //Load file
+  const aiScene* scene = importer.ReadFile(
+    file_path,
+    flags |
+    aiProcess_RemoveComponent | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_ImproveCacheLocality | aiProcess_SortByPType |
+    aiProcess_RemoveRedundantMaterials | aiProcess_FindInstances | aiProcess_EmbedTextures
+    );
 
-    //Load file
-    const aiScene* scene = importer.ReadFile(
-      file_path,
-      flags |
-      aiProcess_RemoveComponent | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_ImproveCacheLocality | aiProcess_SortByPType |
-      aiProcess_RemoveRedundantMaterials | aiProcess_FindInstances | aiProcess_EmbedTextures
-      );
+  //Check for errors
+  if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+    throw std::runtime_error(std::format("Failed to load file {}: {}", file_path.string(), importer.GetErrorString()));
 
-    //Check for errors
-    if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-      throw std::runtime_error(std::format("Failed to load file {}: {}", file_path.string(), importer.GetErrorString()));
+  glm::mat4 input_transform =
+    file_path.extension() == ".fbx" ?
+    glm::scale(glm::mat4(1), glm::vec3(1) * 0.01f) : 1;
 
-    glm::mat4 input_transform =
-      file_path.extension() == ".fbx" ?
-      glm::scale(glm::mat4(1), glm::vec3(1) * 0.01f) : 1;
+  Model model;
+  loadMeshes(model, *scene);
+  loadInstances(model, scene->mRootNode, input_transform);
+  loadBones(model, *scene);
+  model.transform = 1;
+  model.model_id = Model::current_model_id++;
 
-    Model model;
-    loadMeshes(model, *scene);
-    loadInstances(model, scene->mRootNode, input_transform);
-    loadBones(model, *scene);
-    model.transform = 1;
-    model.model_id = Model::current_model_id++;
+  importer.FreeScene();
 
-    importer.FreeScene();
-
-    return model;
-  }
+  return model;
 }
