@@ -1,26 +1,22 @@
+#include "animator.h"
 #include "render.h"
 #include "camera.h"
 #include "input.h"
 #include "draw.h"
 #include "assimp.h"
 #include "shaders.h"
-#include "shapes.h"
-#include "glm.h"
 #include <GLFW/glfw3.h>
 
 void Render::mainLoop(GLFWwindow* window){
-  Model model = Assimp::loadModel("resources/Helios/helios.fbx");
-  Mesh lines = Lines::makeMesh(Cube::positions);
+  Model helios_model = Assimp::loadModel("resources/Helios/helios.fbx");
+  Animation helios_animation = Assimp::loadAnimation("resources/Helios/helios.fbx");
 
+  Animator helios_animator(helios_model, helios_animation);
   while(!glfwWindowShouldClose(window)){
     Camera::update();
 
-    model.bones["Root"].rotation = glm::angleAxis((float)glfwGetTime(), glm::vec3(0,1,0));
-    model.bones["LowerArm.L.001"].rotation = glm::angleAxis((float)glfwGetTime(), glm::vec3(0,0,1));
-    model.updateBones();
-
-    drawModel(model, Shaders::animated_3d);
-    drawMesh(lines, Shaders::lines, translate(5,0,0));
+    helios_animator.update();
+    drawModel(helios_model, Shaders::animated_3d);
 
     //Finish loop
     render(window);

@@ -1,15 +1,8 @@
 #include "assimp.h"
+#include "assimp/scene.h"
+#include "assimp/postprocess.h"
 #include "assimp/mesh.h"
-#include "data_buffer.h"
-#include "glm/ext/matrix_transform.hpp"
-#include "texture_class.h"
-#include <assimp/Importer.hpp>
-#include <assimp/material.h>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-#include <GL/gl.h>
-#include <map>
-#include <stdexcept>
+#include "assimp/texture.h"
 using Path = std::filesystem::path;
 using TextureMap = std::map<std::string, std::shared_ptr<const Texture> >;
 
@@ -33,7 +26,6 @@ glm::vec3 convertVertex(const aiVector3D& vertex){
 void recollectBoneNames(Model& model, const aiMesh& mesh){
   for(unsigned i = 0; i < mesh.mNumBones; ++i){
     std::string bone_name = mesh.mBones[i]->mName.C_Str();
-    if(bone_name.ends_with("_end")) continue;
     if(model.bones.find(bone_name) == model.bones.end()){
       model.bones.registerBone(bone_name);
     }
@@ -181,9 +173,11 @@ unsigned loadBones(Model& model, const aiScene& scene){
     model.bones[bone_id].offset = convertMatrix(bone->mOffsetMatrix);
     for(unsigned i = 0; i < node->mNumChildren; ++i){
       std::string child_name = node->mChildren[i]->mName.C_Str();
-      if(child_name.ends_with("_end")) continue;
 
-      unsigned child_id = model.bones.getId(child_name);
+      auto child = model.bones.find(child_name);
+      if(child == model.bones.end()) continue;
+
+      unsigned child_id = model.bones.getId(child);
       model.bones[child_id].parent = bone_id;
       model.bones[bone_id].children.push_back(child_id);
     }
@@ -226,7 +220,7 @@ Model Assimp::loadModel(const Path& file_path, unsigned flags){
   Model model;
   loadMeshes(model, *scene);
   loadInstances(model, scene->mRootNode, input_transform);
-  loadBones(model, *scene);
+  model.root_id = loadBones(model, *scene);
   model.transform = 1;
   model.model_id = Model::current_model_id++;
 

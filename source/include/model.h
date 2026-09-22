@@ -15,21 +15,24 @@ struct Model {
   Bones bones;
   SSBO bones_transforms;
 
+  unsigned root_id;
+
   unsigned model_id = 0;
   inline static unsigned current_model_id = 1;
 
   void updateBones(){
     std::vector<glm::mat4> result(bones.size());
-    updateBones(result);
+    updateBones(result, root_id);
     bones_transforms.subData(result);
     bones_transforms.bind();
     bones_transforms.bindBase(0);
   }
 
-  void updateBones(std::vector<glm::mat4>& output, unsigned id = 0, const glm::mat4& parent = 1){
-    output[id] = parent * glm::inverse(bones[id].offset) * bones[id].getTransform() * bones[id].offset;
+  void updateBones(std::vector<glm::mat4>& output, unsigned id, const glm::mat4& parent = 1){
+    glm::mat4 transform = parent * bones[id].getTransform();
+    output[id] = transform * bones[id].offset;
 
     for(auto child : bones[id].children)
-      updateBones(output, child, output[id]);
+      updateBones(output, child, transform);
   }
 };

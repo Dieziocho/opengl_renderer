@@ -19,11 +19,12 @@ struct Bone {
   std::vector<unsigned> children;
   glm::mat4 offset;
 
+  glm::vec3 position = glm::vec3(0,0,0);
   glm::quat rotation = glm::quat(1,0,0,0);
   glm::vec3 scale = glm::vec3(1,1,1);
 
   glm::mat4 getTransform(){
-    return glm::scale(glm::mat4_cast(rotation), scale);
+    return glm::translate(glm::mat4(1), position) * glm::mat4_cast(rotation) * glm::scale(glm::mat4(1), scale);
   }
 };
 
@@ -56,7 +57,15 @@ public:
   }
 
   unsigned getId(const std::string& name){
-    return bone_map[name];
+    auto it = bone_map.find(name);
+    if(it == bone_map.end()) throw std::runtime_error(std::format("No bone named {} exists", name));
+    return it->second;
+  }
+
+  unsigned getId(const Bone* bone){
+    unsigned index = bone - bones.data();
+    if(index >= bones.size()) throw std::runtime_error("Invalid bone pointer");
+    return index;
   }
 
   Bone& operator[](unsigned index){
