@@ -1,6 +1,7 @@
 #pragma once
 #include "opengl.h"
 #include "file_utils.h"
+#include "uniform_call.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/ext/matrix_float4x4.hpp"
 #include <filesystem>
@@ -18,20 +19,8 @@ public:
   }
 
   template<typename T>
-  void setUniform(const std::string &name, const T& value){
-    auto location = glGetUniformLocation(id, name.c_str());
-
-    this->use();
-    if constexpr(std::is_same_v<T, int>)  glUniform1i(location, value);
-    else if constexpr(std::is_same_v<T, unsigned>)  glUniform1i(location, value);
-    else if constexpr(std::is_same_v<T, float>)     glUniform1f(location, value);
-    else if constexpr(std::is_same_v<T, glm::vec2>) glUniform2fv(location, 1, glm::value_ptr(value));
-    else if constexpr(std::is_same_v<T, glm::vec3>) glUniform3fv(location, 1, glm::value_ptr(value));
-    else if constexpr(std::is_same_v<T, glm::vec4>) glUniform4fv(location, 1, glm::value_ptr(value));
-    else if constexpr(std::is_same_v<T, glm::mat4>) glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
-    else{
-      static_assert(false, "Invalid uniform type");
-    }
+  void setUniform(const char* name, const T& value){
+    sendValue(name, value);
   }
 
   unsigned getId(){
@@ -40,6 +29,26 @@ public:
 
 private:
   unsigned id;
+
+  GLint getLocation(const char* name){
+    return glGetUniformLocation(id, name);
+  }
+
+  template<typename T>
+  void sendValue(const char* name, const T& value){
+    GLint location = getLocation(name);
+
+    this->use();
+    if constexpr(std::is_same_v<T, int>)  glUniform1i(location, value);
+    else if constexpr(std::is_same_v<T, unsigned>)  glUniform1ui(location, value);
+    else if constexpr(std::is_same_v<T, float>)     glUniform1f(location, value);
+    else if constexpr(std::is_same_v<T, glm::vec2>) glUniform2fv(location, 1, glm::value_ptr(value));
+    else if constexpr(std::is_same_v<T, glm::vec3>) glUniform3fv(location, 1, glm::value_ptr(value));
+    else if constexpr(std::is_same_v<T, glm::vec4>) glUniform4fv(location, 1, glm::value_ptr(value));
+    else if constexpr(std::is_same_v<T, glm::mat4>) glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
+    else
+      static_assert(false, "Invalid uniform type");
+  }
 
   static unsigned compileShader(Path vertex_path, Path fragment_path){
     int success;
@@ -87,3 +96,11 @@ private:
     return shader_id;
   }
 };
+
+template<>
+inline void Shader::setUniform(const char* name, const UniformValue& call){
+  std::visit([&](auto&& value) {
+    using T = std::decay_t<decltype(value)>;
+    sendValue<T>(name, value);
+  }, call.value);
+}

@@ -1,6 +1,7 @@
 #pragma once
 #include "base_buffer.h"
 #include <vector>
+#include <cassert>
 
 struct SSBODeleter {
   void operator()(GLuint id) const {
@@ -53,4 +54,3 @@ public:
 private:
   size_t buffer_size = 0;
 };
-

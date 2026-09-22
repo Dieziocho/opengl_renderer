@@ -9,6 +9,8 @@ namespace Render {
     const Mesh& mesh;
     Shaders::ShaderGroup& shaders;
     glm::mat4 transform;
+    std::vector<UniformCall> uniforms;
+    std::vector<SSBOCall> ssbos;
   };
 
   std::vector<DrawCall> solid_calls;
@@ -30,14 +32,22 @@ namespace Render {
     trans_framebuffer.attachDepthBuffer(depth_buffer);
   }
 
-  void addDrawCall(const Mesh& mesh, Shaders::ShaderGroup& shaders, const glm::mat4 transform){
+  void addDrawCall(const Mesh& mesh, Shaders::ShaderGroup& shaders, const glm::mat4 transform,
+                   std::vector<UniformCall> uniforms, std::vector<SSBOCall> ssbos){
     mesh.getFlags() & MESH_TRANSPARENT ?
-    trans_calls.emplace_back(mesh, shaders, transform) :
-    solid_calls.emplace_back(mesh, shaders, transform);
+    trans_calls.emplace_back(mesh, shaders, transform, std::move(uniforms), std::move(ssbos)) :
+    solid_calls.emplace_back(mesh, shaders, transform, std::move(uniforms), std::move(ssbos));
   }
 
-  void drawCall(Shader& shader, const Mesh& mesh, const glm::mat4& transform){
+  void drawCall(Shader& shader, const Mesh& mesh, const glm::mat4& transform, const std::vector<UniformCall>& uniforms, const std::vector<SSBOCall>& ssbos){
     shader.setUniform("model", transform);
+    for(auto& uniform : uniforms){
+      shader.setUniform(uniform.name, uniform.value);
+    }
+    for(auto& ssbo : ssbos){
+      ssbo.ssbo.bind();
+      ssbo.ssbo.bindBase(0);
+    }
     mesh.bind(shader);
     glDrawElements(mesh.getMode(), mesh.size(), GL_UNSIGNED_INT, 0);
   }
@@ -51,7 +61,7 @@ namespace Render {
     glDepthFunc(GL_LESS);
     glDepthMask(GL_TRUE);
     for(auto& call : solid_calls)
-      drawCall(*call.shaders.solid, call.mesh, call.transform);
+      drawCall(*call.shaders.solid, call.mesh, call.transform, call.uniforms, call.ssbos);
 
     //Draw transparent meshes
     trans_framebuffer.bind();
@@ -64,14 +74,14 @@ namespace Render {
     glBlendEquationi(0, GL_FUNC_ADD);
     glBlendEquationi(1, GL_FUNC_ADD);
     for(auto& call : trans_calls)
-      drawCall(*call.shaders.transparent, call.mesh, call.transform);
+      drawCall(*call.shaders.transparent, call.mesh, call.transform, call.uniforms, call.ssbos);
 
     //Composite pass
     solid_framebuffer.bind();
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    drawCall(Shaders::composite, Mesh::Square(), 1);
+    drawCall(Shaders::composite, Mesh::Square(), 1, {}, {});
 
     //Draw to screen
     Framebuffer::bind(0);
