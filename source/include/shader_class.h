@@ -5,6 +5,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/ext/matrix_float4x4.hpp"
 #include <filesystem>
+#include <map>
 
 class Shader {
 public:
@@ -14,31 +15,46 @@ public:
   Shader(Path vertex_shader, Path fragment_shader) :
     id(compileShader(vertex_shader, fragment_shader)){}
 
-  void use() const {
-    glUseProgram(this->id);
-  }
-
   template<typename T>
   void setUniform(const char* name, const T& value){
     sendValue(name, value);
   }
 
-  unsigned getId(){
+  unsigned getId() const {
     return id;
   }
 
+  void bind() const {
+    if(current_bind == id) return;
+    glUseProgram(this->id);
+    current_bind = id;
+  }
+
+
 private:
+  std::map<const char*, GLint> uniform_cache;
   unsigned id;
+  inline static GLuint current_bind = -1;
 
   GLint getLocation(const char* name){
-    return glGetUniformLocation(id, name);
+    GLint location;
+    auto it = uniform_cache.lower_bound(name);
+
+    if(it == uniform_cache.end() || uniform_cache.key_comp()(name, it->first)){
+      location = glGetUniformLocation(id, name);
+      uniform_cache.insert(it, {name, location});
+    }
+    else {
+      return it->second;
+    }
+    return location;
   }
 
   template<typename T>
   void sendValue(const char* name, const T& value){
     GLint location = getLocation(name);
 
-    this->use();
+    this->bind();
     if constexpr(std::is_same_v<T, int>)  glUniform1i(location, value);
     else if constexpr(std::is_same_v<T, unsigned>)  glUniform1ui(location, value);
     else if constexpr(std::is_same_v<T, float>)     glUniform1f(location, value);

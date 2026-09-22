@@ -56,6 +56,9 @@ namespace OpenGL {
     //Enable antialiasing
     glEnable(GL_MULTISAMPLE);
 
+    //Enable antialiasing
+    glEnable(GL_CULL_FACE);
+
     //Set GL_LINES width
     glLineWidth(3.0f);
 
