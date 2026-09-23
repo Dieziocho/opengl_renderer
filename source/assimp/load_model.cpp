@@ -3,6 +3,9 @@
 #include "assimp/postprocess.h"
 #include "assimp/mesh.h"
 #include "assimp/texture.h"
+#include <stdexcept>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_decompose.hpp>
 using Path = std::filesystem::path;
 using TextureMap = std::map<std::string, std::shared_ptr<const Texture> >;
 
@@ -26,7 +29,7 @@ glm::vec3 convertVertex(const aiVector3D& vertex){
 void recollectBoneNames(Model& model, const aiMesh& mesh){
   for(unsigned i = 0; i < mesh.mNumBones; ++i){
     std::string bone_name = mesh.mBones[i]->mName.C_Str();
-    if(model.bones.find(bone_name) == model.bones.end()){
+    if(!model.bones.contains(bone_name)){
       model.bones.registerBone(bone_name);
     }
   }
@@ -160,6 +163,23 @@ void loadInstances(Model& model, const aiNode* node, glm::mat4 transform = glm::
     loadInstances(model, node->mChildren[i], transform);
 }
 
+void loadBoneMatrices(Model& model, unsigned bone_id, const aiBone& ai_bone, const aiNode& node){
+  auto& bone = model.bones[bone_id];
+  bone.offset = convertMatrix(ai_bone.mOffsetMatrix);
+
+  glm::vec3 position;
+  glm::quat rotation;
+  glm::vec3 scale;
+  glm::vec3 skew;
+  glm::vec4 perspective;
+
+  bool success = glm::decompose(convertMatrix(node.mTransformation), scale, rotation, position, skew, perspective);
+  if(!success) throw std::runtime_error("Failed to get bone pose");
+  bone.position = position;
+  bone.rotation = rotation;
+  bone.scale = scale;
+}
+
 unsigned loadBones(Model& model, const aiScene& scene){
   size_t bone_count = model.bones.size();
   model.bones.resize();
@@ -170,7 +190,7 @@ unsigned loadBones(Model& model, const aiScene& scene){
     const aiNode* node = scene.mRootNode->findBoneNode(bone);
     if(!bone || !node) continue;
 
-    model.bones[bone_id].offset = convertMatrix(bone->mOffsetMatrix);
+    loadBoneMatrices(model, bone_id, *bone, *node);
     for(unsigned i = 0; i < node->mNumChildren; ++i){
       std::string child_name = node->mChildren[i]->mName.C_Str();
 
@@ -223,6 +243,7 @@ Model Assimp::loadModel(const Path& file_path, unsigned flags){
   model.root_id = loadBones(model, *scene);
   model.transform = 1;
   model.model_id = Model::current_model_id++;
+  model.updateBones();
 
   importer.FreeScene();
 

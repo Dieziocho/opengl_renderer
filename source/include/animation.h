@@ -62,9 +62,9 @@ struct Animation {
   float ticks_per_second;
   float duration;
 
-  Keyframe getTransform(const std::string& bone_name, float time) const {
+  std::optional<Keyframe> getTransform(const std::string& bone_name, float time) const {
     auto it = bones.find(bone_name);
-    if(it == bones.end()) return {};
+    if(it == bones.end()) return std::nullopt;
 
     time *= ticks_per_second;
     time = fmod(time, duration);
@@ -75,6 +75,6 @@ struct Animation {
     glm::quat rotation = interpolate<KeyRotation, glm::quat>(keyframes.rotations, time);
     glm::vec3 scale = interpolate<KeyScale, glm::vec3>(keyframes.scales, time);
 
-    return {position, rotation, scale};
+    return Keyframe(position, rotation, scale);
   }
 };

@@ -38,6 +38,11 @@ public:
     bones.resize(bone_map.size());
   }
 
+  bool contains(const std::string& name){
+    auto it = bone_map.find(name);
+    return it != bone_map.end();
+  }
+
   Bone* find(const std::string& name){
     auto it = bone_map.find(name);
     if(it == bone_map.end()) return end();

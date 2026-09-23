@@ -17,10 +17,12 @@ public:
     float delta = glfwGetTime() - base_time;
 
     for(auto& [bone_name, bone_id] : model.bones.map()){
-      Keyframe keyframe = animation->getTransform(bone_name, delta);
-      model.bones[bone_id].position = keyframe.position;
-      model.bones[bone_id].rotation = keyframe.rotation;
-      model.bones[bone_id].scale = keyframe.scale;
+      auto result = animation->getTransform(bone_name, delta);
+      if(result.has_value()){
+        model.bones[bone_id].position = result.value().position;
+        model.bones[bone_id].rotation = result.value().rotation;
+        model.bones[bone_id].scale = result.value().scale;
+      }
     }
 
     model.updateBones();
