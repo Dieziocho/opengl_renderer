@@ -25,7 +25,7 @@ void Animator::update(){
   for(auto& [bone_name, bone_id] : model.bones.map()){
     auto result = current_animation->getTransform(bone_name, delta);
     if(result.has_value()){
-      Bone& bone = instance.getBone(bone_id);
+      BoneState& bone = instance.getBone(bone_id);
       Keyframe keyframe = result.value();
       bone.position = keyframe.position;
       bone.rotation = keyframe.rotation;

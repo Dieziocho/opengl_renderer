@@ -5,8 +5,9 @@
 
 class ModelInstance {
 public:
-  ModelInstance(Model& model) : model(&model), bones(model.bones), animator(model, *this){
-    size_t bone_count = bones.size();
+  ModelInstance(Model& model) : model(&model), animator(model, *this){
+    copyModelBoneStates();
+    size_t bone_count = model.bones.size();
     bones_transforms.reserve<glm::mat4>(bone_count);
     updateBones();
   }
@@ -20,8 +21,8 @@ public:
     updateBones();
   }
 
-  Bone& getBone(unsigned id){
-    return bones[id];
+  BoneState& getBone(unsigned id){
+    return bone_states[id];
   }
 
   const glm::mat4& getTransform() const {
@@ -32,12 +33,11 @@ public:
     return bones_transforms;
   }
 
-
 private:
   const Model* model;
   glm::mat4 transform = 1;
+  std::vector<BoneState> bone_states;
   SSBO bones_transforms;
-  Bones bones;
   Animator animator;
 
   void updateBones(){
@@ -49,10 +49,16 @@ private:
   }
 
   void updateBones(std::vector<glm::mat4>& output, unsigned id, const glm::mat4& parent = 1){
-    glm::mat4 transform = parent * bones[id].getTransform();
-    output[id] = transform * bones[id].offset;
+    glm::mat4 transform = parent * bone_states[id].getTransform();
+    output[id] = transform * model->bones[id].offset;
 
-    for(auto child : bones[id].children)
+    for(auto child : model->bones[id].children)
       updateBones(output, child, transform);
+  }
+
+  void copyModelBoneStates(){
+    bone_states.reserve(model->bones.size());
+    for(auto& bone : model->bones)
+      bone_states.emplace_back(bone.default_state);
   }
 };

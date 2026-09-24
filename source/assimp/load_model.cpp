@@ -163,9 +163,9 @@ void loadBoneMatrices(Model& model, unsigned bone_id, const aiBone& ai_bone, con
 
   bool success = glm::decompose(Assimp::convertMat4(node.mTransformation), scale, rotation, position, skew, perspective);
   if(!success) throw std::runtime_error("Failed to get bone pose");
-  bone.position = position;
-  bone.rotation = rotation;
-  bone.scale = scale;
+  bone.default_state.position = position;
+  bone.default_state.rotation = rotation;
+  bone.default_state.scale = scale;
 }
 
 void loadBoneAnimations(Model& model, const aiAnimation& ai_animation){
@@ -230,7 +230,7 @@ unsigned loadBones(Model& model, const aiScene& scene){
   }
 
   for(unsigned i = 0; i < model.bones.size(); ++i){
-    Bone& bone = model.bones[i];
+    BoneInfo& bone = model.bones[i];
     if(bone.parent == -1u) return i;
   }
   return -1;

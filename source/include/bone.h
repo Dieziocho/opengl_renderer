@@ -1,10 +1,5 @@
 #pragma once
-#include "glm/ext/matrix_float4x4.hpp"
 #include "glm/gtc/quaternion.hpp"
-#include <format>
-#include <stdexcept>
-#include <string>
-#include <map>
 #define BONE_COUNT glm::ivec4::length()
 
 struct BoneData {
@@ -14,11 +9,7 @@ struct BoneData {
   float weights[BONE_COUNT] = {0, 0, 0, 0};
 };
 
-struct Bone {
-  unsigned parent = -1u;
-  std::vector<unsigned> children;
-  glm::mat4 offset;
-
+struct BoneState {
   glm::vec3 position = glm::vec3(0,0,0);
   glm::quat rotation = glm::quat(1,0,0,0);
   glm::vec3 scale = glm::vec3(1,1,1);
@@ -28,71 +19,10 @@ struct Bone {
   }
 };
 
-class Bones {
-public:
-  void registerBone(const std::string& name){
-    bone_map[name] = bone_map.size();
-  }
+struct BoneInfo {
+  unsigned parent = -1u;
+  std::vector<unsigned> children;
+  glm::mat4 offset;
 
-  void resize(){
-    bones.resize(bone_map.size());
-  }
-
-  bool contains(const std::string& name){
-    auto it = bone_map.find(name);
-    return it != bone_map.end();
-  }
-
-  Bone* find(const std::string& name){
-    auto it = bone_map.find(name);
-    if(it == bone_map.end()) return end();
-    return &bones[it->second];
-  }
-
-  Bone* begin(){
-    return bones.data();
-  }
-
-  Bone* end(){
-    return bones.data() + bones.size();
-  }
-
-  size_t size() const {
-    return bone_map.size();
-  }
-
-  unsigned getId(const std::string& name){
-    auto it = bone_map.find(name);
-    if(it == bone_map.end()) throw std::runtime_error(std::format("No bone named {} exists", name));
-    return it->second;
-  }
-
-  unsigned getId(const Bone* bone){
-    unsigned index = bone - bones.data();
-    if(index >= bones.size()) throw std::runtime_error("Invalid bone pointer");
-    return index;
-  }
-
-  Bone& operator[](unsigned index){
-    return bones[index];
-  }
-
-  const Bone& operator[](unsigned index) const {
-    return bones[index];
-  }
-
-  Bone& operator[](const std::string& name){
-    auto it = bone_map.find(name);
-    if(it == bone_map.end()) throw std::runtime_error(std::format("No bone named {} exists", name));
-    return bones[it->second];
-  }
-
-  const std::map<std::string, unsigned>& map() const {
-    return bone_map;
-  }
-
-private:
-  std::map<std::string, unsigned> bone_map;
-  std::vector<Bone> bones;
+  BoneState default_state;
 };
-

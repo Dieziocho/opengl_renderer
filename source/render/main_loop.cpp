@@ -5,7 +5,6 @@
 #include "assimp.h"
 #include "shaders.h"
 #include "model_instance.h"
-#include <GLFW/glfw3.h>
 
 void Render::mainLoop(GLFWwindow* window){
   Model helios_model = Assimp::loadModel("resources/Helios/test.fbx");
