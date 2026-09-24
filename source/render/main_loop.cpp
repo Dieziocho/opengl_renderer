@@ -4,20 +4,20 @@
 #include "draw.h"
 #include "assimp.h"
 #include "shaders.h"
-#include "animator.h"
+#include "model_instance.h"
 #include <GLFW/glfw3.h>
 
 void Render::mainLoop(GLFWwindow* window){
   Model helios_model = Assimp::loadModel("resources/Helios/test.fbx");
-  Animator animator(helios_model);
-  animator.play("Hi", true);
+  ModelInstance helios(helios_model);
+  helios.playAnimation("Hi");
 
   while(!glfwWindowShouldClose(window)){
     Camera::update();
 
-    animator.update();
-    drawModel(helios_model, Shaders::animated_3d, {},
-              {{helios_model.bones_transforms, 0}}
+    helios.update();
+    drawModel(helios_model, Shaders::animated_3d, helios.getTransform(), {},
+              {{helios.getBonesTransforms(), 0}}
               );
 
     //Finish loop

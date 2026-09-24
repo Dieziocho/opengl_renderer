@@ -5,8 +5,8 @@ void drawMesh(const Mesh& mesh, Shaders::ShaderGroup& shaders, const glm::mat4& 
   Render::addDrawCall(mesh, shaders, transform, {}, {});
 }
 
-void drawModel(const Model& model, Shaders::ShaderGroup& shaders,
+void drawModel(const Model& model, Shaders::ShaderGroup& shaders, const glm::mat4& transform,
                std::vector<UniformCall> uniforms, std::vector<SSBOCall> ssbos){
   for(auto& instance : model.mesh_instances)
-    Render::addDrawCall(model.meshes[instance.index], shaders, model.transform * instance.transformation, std::move(uniforms), std::move(ssbos));
+    Render::addDrawCall(model.meshes[instance.index], shaders, transform * instance.transformation, std::move(uniforms), std::move(ssbos));
 }

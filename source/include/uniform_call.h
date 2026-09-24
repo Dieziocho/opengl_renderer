@@ -24,8 +24,8 @@ struct UniformCall {
 };
 
 struct SSBOCall {
-  SSBO& ssbo;
+  const SSBO& ssbo;
   unsigned base;
 
-  SSBOCall(SSBO& ssbo, unsigned base) : ssbo(ssbo), base(base){}
+  SSBOCall(const SSBO& ssbo, unsigned base) : ssbo(ssbo), base(base){}
 };

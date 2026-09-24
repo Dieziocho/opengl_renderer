@@ -209,9 +209,7 @@ void loadAnimations(Model& model, const aiScene& scene){
 }
 
 unsigned loadBones(Model& model, const aiScene& scene){
-  size_t bone_count = model.bones.size();
   model.bones.resize();
-  model.bones_transforms.reserve<glm::mat4>(bone_count);
 
   for(auto& [bone_name, bone_id] : model.bones.map()){
     const aiBone* bone = scene.findBone(aiString(bone_name.data()));
@@ -271,9 +269,7 @@ Model Assimp::loadModel(const Path& file_path, unsigned){
   loadAnimations(model, *scene);
 
   model.root_id = loadBones(model, *scene);
-  model.transform = 1;
   model.model_id = Model::current_model_id++;
-  model.updateBones();
 
   importer.FreeScene();
 

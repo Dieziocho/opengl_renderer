@@ -1,0 +1,58 @@
+#pragma once
+#include "animator.h"
+#include "model.h"
+#include "ssbo_class.h"
+
+class ModelInstance {
+public:
+  ModelInstance(Model& model) : model(&model), bones(model.bones), animator(model, *this){
+    size_t bone_count = bones.size();
+    bones_transforms.reserve<glm::mat4>(bone_count);
+    updateBones();
+  }
+
+  void playAnimation(const char* name){
+    animator.play(name, true);
+  }
+
+  void update(){
+    animator.update();
+    updateBones();
+  }
+
+  Bone& getBone(unsigned id){
+    return bones[id];
+  }
+
+  const glm::mat4& getTransform() const {
+    return transform;
+  }
+
+  const SSBO& getBonesTransforms() const {
+    return bones_transforms;
+  }
+
+
+private:
+  const Model* model;
+  glm::mat4 transform = 1;
+  SSBO bones_transforms;
+  Bones bones;
+  Animator animator;
+
+  void updateBones(){
+    std::vector<glm::mat4> result(model->bones.size());
+    updateBones(result, model->root_id);
+    bones_transforms.subData(result);
+    bones_transforms.bind();
+    bones_transforms.bindBase(0);
+  }
+
+  void updateBones(std::vector<glm::mat4>& output, unsigned id, const glm::mat4& parent = 1){
+    glm::mat4 transform = parent * bones[id].getTransform();
+    output[id] = transform * bones[id].offset;
+
+    for(auto child : bones[id].children)
+      updateBones(output, child, transform);
+  }
+};

@@ -23,7 +23,7 @@ struct Bone {
   glm::quat rotation = glm::quat(1,0,0,0);
   glm::vec3 scale = glm::vec3(1,1,1);
 
-  glm::mat4 getTransform(){
+  glm::mat4 getTransform() const {
     return glm::translate(glm::mat4(1), position) * glm::mat4_cast(rotation) * glm::scale(glm::mat4(1), scale);
   }
 };
@@ -57,7 +57,7 @@ public:
     return bones.data() + bones.size();
   }
 
-  size_t size(){
+  size_t size() const {
     return bone_map.size();
   }
 
@@ -77,13 +77,17 @@ public:
     return bones[index];
   }
 
+  const Bone& operator[](unsigned index) const {
+    return bones[index];
+  }
+
   Bone& operator[](const std::string& name){
     auto it = bone_map.find(name);
     if(it == bone_map.end()) throw std::runtime_error(std::format("No bone named {} exists", name));
     return bones[it->second];
   }
 
-  const std::map<std::string, unsigned>& map(){
+  const std::map<std::string, unsigned>& map() const {
     return bone_map;
   }
 
