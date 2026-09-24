@@ -1,4 +1,5 @@
 #pragma once
+#include "animation_list.h"
 #include "mesh.h"
 #include "ssbo_class.h"
 
@@ -11,6 +12,7 @@ struct Model {
   std::vector<Mesh> meshes;
   std::vector<MeshInstance> mesh_instances;
   glm::mat4 transform;
+  AnimationList animations;
 
   Bones bones;
   SSBO bones_transforms;

@@ -9,21 +9,9 @@
 using Path = std::filesystem::path;
 using TextureMap = std::map<std::string, std::shared_ptr<const Texture> >;
 
-glm::mat4 convertMatrix(const aiMatrix4x4& m){
-  return glm::mat4(
-    m.a1, m.b1, m.c1, m.d1,
-    m.a2, m.b2, m.c2, m.d2,
-    m.a3, m.b3, m.c3, m.d3,
-    m.a4, m.b4, m.c4, m.d4
-    );
-}
 
 glm::mat4 operator*(const glm::mat4& left, const aiMatrix4x4& m){
-  return left * convertMatrix(m);
-}
-
-glm::vec3 convertVertex(const aiVector3D& vertex){
-  return {vertex.x, vertex.y, vertex.z};
+  return left * Assimp::convertMat4(m);
 }
 
 void recollectBoneNames(Model& model, const aiMesh& mesh){
@@ -109,9 +97,9 @@ void loadMeshes(Model& model, const aiScene& scene){
     vertices.reserve(mesh.mNumVertices);
     for(unsigned i = 0; i < mesh.mNumVertices; ++i)
       vertices.emplace_back(Vertex3{
-        glm::vec4(convertVertex(mesh.mVertices[i]), 1.0f),
+        glm::vec4(Assimp::convertVec3(mesh.mVertices[i]), 1.0f),
         has_texture_coords
-          ? convertVertex(mesh.mTextureCoords[0][i])
+          ? Assimp::convertVec3(mesh.mTextureCoords[0][i])
           : glm::vec2{0, 0}
       });
 
@@ -165,7 +153,7 @@ void loadInstances(Model& model, const aiNode* node, glm::mat4 transform = glm::
 
 void loadBoneMatrices(Model& model, unsigned bone_id, const aiBone& ai_bone, const aiNode& node){
   auto& bone = model.bones[bone_id];
-  bone.offset = convertMatrix(ai_bone.mOffsetMatrix);
+  bone.offset = Assimp::convertMat4(ai_bone.mOffsetMatrix);
 
   glm::vec3 position;
   glm::quat rotation;
@@ -173,11 +161,51 @@ void loadBoneMatrices(Model& model, unsigned bone_id, const aiBone& ai_bone, con
   glm::vec3 skew;
   glm::vec4 perspective;
 
-  bool success = glm::decompose(convertMatrix(node.mTransformation), scale, rotation, position, skew, perspective);
+  bool success = glm::decompose(Assimp::convertMat4(node.mTransformation), scale, rotation, position, skew, perspective);
   if(!success) throw std::runtime_error("Failed to get bone pose");
   bone.position = position;
   bone.rotation = rotation;
   bone.scale = scale;
+}
+
+void loadBoneAnimations(Model& model, const aiAnimation& ai_animation){
+  Animation animation;
+  animation.ticks_per_second = ai_animation.mTicksPerSecond ? ai_animation.mTicksPerSecond : 25;
+  animation.duration = ai_animation.mDuration;
+
+  for(auto* channel : std::span(ai_animation.mChannels, ai_animation.mNumChannels)){
+    std::string bone_name = channel->mNodeName.C_Str();
+
+    for(auto& position_key : std::span(channel->mPositionKeys, channel->mNumPositionKeys)){
+      KeyPosition data;
+      data.value = Assimp::convertVec3(position_key.mValue);
+      data.time = position_key.mTime;
+      animation.bones[bone_name].positions.push_back(data);
+    }
+
+    for(auto& rotation_key : std::span(channel->mRotationKeys, channel->mNumRotationKeys)){
+      KeyRotation data;
+      data.value = Assimp::convertQuat(rotation_key.mValue);
+      data.time = rotation_key.mTime;
+      animation.bones[bone_name].rotations.push_back(data);
+    }
+
+    for(auto& scale_key : std::span(channel->mScalingKeys, channel->mNumScalingKeys)){
+      KeyScale data;
+      data.value = Assimp::convertVec3(scale_key.mValue);
+      data.time = scale_key.mTime;
+      animation.bones[bone_name].scales.push_back(data);
+    }
+  }
+
+  model.animations.addAnimation(ai_animation.mName.C_Str(), std::move(animation));
+}
+
+void loadAnimations(Model& model, const aiScene& scene){
+  if(!scene.HasAnimations()) return;
+
+  for(auto& animation : std::span(scene.mAnimations, scene.mNumAnimations))
+    loadBoneAnimations(model, *animation);
 }
 
 unsigned loadBones(Model& model, const aiScene& scene){
@@ -210,21 +238,21 @@ unsigned loadBones(Model& model, const aiScene& scene){
   return -1;
 }
 
-Model Assimp::loadModel(const Path& file_path, unsigned flags){
+Model Assimp::loadModel(const Path& file_path, unsigned){
   if(!exists(file_path)) throw std::runtime_error(file_path.string() + ": does not exist");
 
   importer.SetPropertyInteger(
     AI_CONFIG_PP_RVC_FLAGS,
-    aiComponent_CAMERAS |
+    aiComponent_NORMALS |
+    aiComponent_TANGENTS_AND_BITANGENTS |
     aiComponent_COLORS |
     aiComponent_LIGHTS |
-    aiComponent_TANGENTS_AND_BITANGENTS
+    aiComponent_CAMERAS
     );
 
   //Load file
   const aiScene* scene = importer.ReadFile(
     file_path,
-    flags |
     aiProcess_RemoveComponent | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_ImproveCacheLocality | aiProcess_SortByPType |
     aiProcess_RemoveRedundantMaterials | aiProcess_FindInstances | aiProcess_EmbedTextures
     );
@@ -240,6 +268,8 @@ Model Assimp::loadModel(const Path& file_path, unsigned flags){
   Model model;
   loadMeshes(model, *scene);
   loadInstances(model, scene->mRootNode, input_transform);
+  loadAnimations(model, *scene);
+
   model.root_id = loadBones(model, *scene);
   model.transform = 1;
   model.model_id = Model::current_model_id++;
