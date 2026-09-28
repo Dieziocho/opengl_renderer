@@ -5,7 +5,8 @@
 
 class ModelInstance {
 public:
-  ModelInstance(Model& model) : model(&model), animator(model, *this){
+  ModelInstance() = default;
+  ModelInstance(Model& model) : model(&model), animator(model){
     copyModelBoneStates();
     size_t bone_count = model.bones.size();
     bones_transforms.reserve<glm::mat4>(bone_count);
@@ -17,7 +18,7 @@ public:
   }
 
   void update(){
-    animator.update();
+    animator.update(bone_states);
     updateBones();
   }
 

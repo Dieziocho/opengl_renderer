@@ -11,12 +11,9 @@ struct SSBODeleter {
 
 class SSBO : public BaseBuffer<SSBODeleter> {
 public:
-  SSBO(){
-    glGenBuffers(1, &id);
-  }
-
   template<typename T>
   void reserve(size_t count){
+    glGenBuffers(1, &id);
     buffer_size = count * sizeof(T);
 
     bind();
