@@ -1,20 +1,13 @@
-#include "assimp.h"
-#include "draw.h"
-#include "model_instance.h"
-#include "shaders.h"
+#include "engine.h"
 
-Model helios_model;
-ModelInstance helios;
+Entity* helios;
 
 void setups(){
-  helios_model = Assimp::loadModel("resources/Helios/helios.fbx");
-  helios = ModelInstance(helios_model);
-  helios.playAnimation("Hi");
+  const Model& model = Engine::getModel("resources/Helios/helios.fbx");
+  helios = &Engine::createEntity(model);
+  helios->playAnimation("Hi");
 }
 
 void onFrame(){
-  helios.update();
-  drawModel(helios_model, Shaders::animated_3d, helios.getTransform(), {},
-            {{helios.getBonesTransforms(), 0}}
-            );
+  helios->translate({0,0.001,0});
 }

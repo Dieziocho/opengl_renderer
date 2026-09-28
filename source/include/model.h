@@ -2,6 +2,8 @@
 #include "mesh.h"
 #include "bone_list.h"
 #include "animation_list.h"
+#include "shaders.h"
+#define MODEL_HAS_ANIMATIONS (1 << 0)
 
 struct MeshInstance {
   unsigned index;
@@ -11,10 +13,10 @@ struct MeshInstance {
 struct Model {
   std::vector<Mesh> meshes;
   std::vector<MeshInstance> mesh_instances;
+  Shaders::ShaderGroup* shaders;
   BoneList bones;
   AnimationList animations;
   unsigned root_id;
 
-  unsigned model_id = 0;
-  inline static unsigned current_model_id = 1;
+  unsigned flags = 0;
 };

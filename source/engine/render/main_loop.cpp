@@ -1,3 +1,5 @@
+#include "draw.h"
+#include "engine.h"
 #include "render.h"
 #include "camera.h"
 #include "input.h"
@@ -12,6 +14,13 @@ void Render::mainLoop(GLFWwindow* window){
     Camera::update();
 
     onFrame();
+
+    for(auto& entity : Engine::getEntities()){
+      auto& instance = entity.getInstance();
+      auto& model = instance.getModel();
+      instance.update();
+      drawModel(model, *model.shaders, entity.getTransform(), {}, {{instance.getBonesTransforms(), 0}});
+    }
 
     //Finish loop
     render(window);

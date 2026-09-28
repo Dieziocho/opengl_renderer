@@ -6,7 +6,7 @@
 class ModelInstance {
 public:
   ModelInstance() = default;
-  ModelInstance(Model& model) : model(&model), animator(model){
+  ModelInstance(const Model& model) : model(&model), animator(model){
     copyModelBoneStates();
     size_t bone_count = model.bones.size();
     bones_transforms.reserve<glm::mat4>(bone_count);
@@ -26,23 +26,24 @@ public:
     return bone_states[id];
   }
 
-  const glm::mat4& getTransform() const {
-    return transform;
-  }
-
   const SSBO& getBonesTransforms() const {
     return bones_transforms;
   }
 
+  const Model& getModel() const {
+    return *model;
+  }
+
 private:
   const Model* model;
-  glm::mat4 transform = 1;
   std::vector<BoneState> bone_states;
   SSBO bones_transforms;
   Animator animator;
 
   void updateBones(){
-    std::vector<glm::mat4> result(model->bones.size());
+    size_t bone_count = model->bones.size();
+    if(!bone_count) return;
+    std::vector<glm::mat4> result(bone_count);
     updateBones(result, model->root_id);
     bones_transforms.subData(result);
     bones_transforms.bind();

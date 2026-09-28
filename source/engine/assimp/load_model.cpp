@@ -3,6 +3,8 @@
 #include "assimp/postprocess.h"
 #include "assimp/mesh.h"
 #include "assimp/texture.h"
+#include "model.h"
+#include "shaders.h"
 #include <stdexcept>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>
@@ -203,6 +205,7 @@ void loadBoneAnimations(Model& model, const aiAnimation& ai_animation){
 
 void loadAnimations(Model& model, const aiScene& scene){
   if(!scene.HasAnimations()) return;
+  model.flags |= MODEL_HAS_ANIMATIONS;
 
   for(auto& animation : std::span(scene.mAnimations, scene.mNumAnimations))
     loadBoneAnimations(model, *animation);
@@ -268,8 +271,11 @@ Model Assimp::loadModel(const Path& file_path, unsigned){
   loadInstances(model, scene->mRootNode, input_transform);
   loadAnimations(model, *scene);
 
+  model.shaders = model.flags & MODEL_HAS_ANIMATIONS ?
+                  &Shaders::animated_3d :
+                  &Shaders::generic_3d;
+
   model.root_id = loadBones(model, *scene);
-  model.model_id = Model::current_model_id++;
 
   importer.FreeScene();
 
