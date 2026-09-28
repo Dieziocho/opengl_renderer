@@ -7,6 +7,6 @@ namespace Render {
   void mainLoop(GLFWwindow* window);
 
   void addDrawCall(const Mesh& mesh, Shaders::ShaderGroup& shaders, const glm::mat4 transform,
-                   std::vector<UniformCall> uniforms, std::vector<SSBOCall> ssbos);
+                   const std::vector<UniformCall>& uniforms, const std::vector<SSBOCall>& ssbos);
   void render(GLFWwindow* window);
 }

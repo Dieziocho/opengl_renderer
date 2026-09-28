@@ -33,10 +33,10 @@ namespace Render {
   }
 
   void addDrawCall(const Mesh& mesh, Shaders::ShaderGroup& shaders, const glm::mat4 transform,
-                   std::vector<UniformCall> uniforms, std::vector<SSBOCall> ssbos){
+                   const std::vector<UniformCall>& uniforms, const std::vector<SSBOCall>& ssbos){
     mesh.getFlags() & MESH_TRANSPARENT ?
-    trans_calls.emplace_back(mesh, shaders, transform, std::move(uniforms), std::move(ssbos)) :
-    solid_calls.emplace_back(mesh, shaders, transform, std::move(uniforms), std::move(ssbos));
+    trans_calls.emplace_back(mesh, shaders, transform, uniforms, ssbos) :
+    solid_calls.emplace_back(mesh, shaders, transform, uniforms, ssbos);
   }
 
   void drawCall(Shader& shader, const Mesh& mesh, const glm::mat4& transform, const std::vector<UniformCall>& uniforms, const std::vector<SSBOCall>& ssbos){
