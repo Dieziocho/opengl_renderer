@@ -4,8 +4,7 @@ layout(location = 1) in vec2 a_texture_coordinates;
 layout(location = 2) in ivec4 bone_ids;
 layout(location = 3) in vec4 weights;
 layout(std140, binding = 0) uniform Camera {
-    mat4 view;
-    mat4 projection;
+    mat4 projection_view;
     vec3 camera_position;
 };
 
@@ -33,6 +32,6 @@ void main() {
         total_position += (transform * vec4(position, 1)) * weights[i];
     }
 
-    gl_Position = projection * view * model * total_position;
+    gl_Position = projection_view * model * total_position;
     texture_coordinates = a_texture_coordinates;
 }

@@ -5,8 +5,7 @@
 #include <glm/gtx/rotate_vector.hpp>
 
 struct CameraParameters {
-  glm::mat4 view;
-  glm::mat4 projection;
+  glm::mat4 projection_view;
   glm::vec3 camera_position;
 };
 
@@ -33,8 +32,7 @@ namespace Camera {
     changed = false;
 
     CameraParameters parameters;
-    parameters.view = getViewMatrix();
-    parameters.projection = getProjectionMatrix();
+    parameters.projection_view = getProjectionMatrix() * getViewMatrix();
     parameters.camera_position = getPosition();
 
     parameters_ubo.update(parameters);
