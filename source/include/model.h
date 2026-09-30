@@ -15,6 +15,7 @@ struct Model {
   std::vector<MeshInstance> mesh_instances;
   Shaders::ShaderGroup* shaders;
   BoneList bones;
+  SSBO bones_offset;
   AnimationList animations;
   unsigned root_id;
 

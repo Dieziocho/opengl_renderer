@@ -159,7 +159,6 @@ void loadInstances(Model& model, const aiNode* node, glm::mat4 transform = glm::
 
 void loadBoneMatrices(Model& model, unsigned bone_id, const aiBone& ai_bone, const aiNode& node){
   auto& bone = model.bones[bone_id];
-  bone.offset = Assimp::convertMat4(ai_bone.mOffsetMatrix);
 
   glm::vec3 position;
   glm::quat rotation;
@@ -216,12 +215,14 @@ void loadAnimations(Model& model, const aiScene& scene){
 
 unsigned loadBones(Model& model, const aiScene& scene){
   model.bones.resize();
+  std::vector<glm::mat4> bone_offsets(model.bones.size());
 
   for(auto& [bone_name, bone_id] : model.bones.map()){
     const aiBone* bone = scene.findBone(aiString(bone_name.data()));
     const aiNode* node = scene.mRootNode->findBoneNode(bone);
     if(!bone || !node) continue;
 
+    bone_offsets[bone_id] = Assimp::convertMat4(bone->mOffsetMatrix);
     loadBoneMatrices(model, bone_id, *bone, *node);
     for(unsigned i = 0; i < node->mNumChildren; ++i){
       std::string child_name = node->mChildren[i]->mName.C_Str();
@@ -234,6 +235,8 @@ unsigned loadBones(Model& model, const aiScene& scene){
       model.bones[bone_id].children.push_back(child_id);
     }
   }
+
+  model.bones_offset.setData(bone_offsets);
 
   for(unsigned i = 0; i < model.bones.size(); ++i){
     BoneInfo& bone = model.bones[i];
@@ -274,14 +277,14 @@ Model Assimp::loadModel(const Path& file_path, unsigned flags){
   Model model;
   loadMeshes(model, *scene, load_animations);
   loadInstances(model, scene->mRootNode, input_transform);
-  if(load_animations)
+  if(load_animations){
+    model.root_id = loadBones(model, *scene);
     loadAnimations(model, *scene);
+  }
 
   model.shaders = model.flags & MODEL_HAS_ANIMATIONS ?
                   &Shaders::animated_3d :
                   &Shaders::generic_3d;
-
-  model.root_id = loadBones(model, *scene);
 
   importer.FreeScene();
 

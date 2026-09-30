@@ -47,17 +47,14 @@ private:
       std::vector<glm::mat4> result(model->bones.size());
       updateBones(result, model->root_id);
       bones_transforms.subData(result);
-      bones_transforms.bind();
-      bones_transforms.bindBase(0);
     }
   }
 
   void updateBones(std::vector<glm::mat4>& output, unsigned id, const glm::mat4& parent = 1){
-    glm::mat4 transform = parent * bone_states[id].getTransform();
-    output[id] = transform * model->bones[id].offset;
+    output[id] = parent * bone_states[id].getTransform();
 
     for(auto child : model->bones[id].children)
-      updateBones(output, child, transform);
+      updateBones(output, child, output[id]);
   }
 
   void copyModelBoneStates(){

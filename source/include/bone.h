@@ -22,7 +22,6 @@ struct BoneState {
 struct BoneInfo {
   unsigned parent = -1u;
   std::vector<unsigned> children;
-  glm::mat4 offset;
 
   BoneState default_state;
 };

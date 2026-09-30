@@ -46,7 +46,7 @@ namespace Render {
     }
     for(auto& ssbo : ssbos){
       ssbo.ssbo.bind();
-      ssbo.ssbo.bindBase(0);
+      ssbo.ssbo.bindBase(ssbo.base);
     }
     mesh.bind(shader);
     glDrawElements(mesh.getMode(), mesh.size(), GL_UNSIGNED_INT, 0);

@@ -19,7 +19,7 @@ void Render::mainLoop(GLFWwindow* window){
       auto& instance = entity.getInstance();
       auto& model = instance.getModel();
       instance.update();
-      drawModel(model, *model.shaders, entity.getTransform(), {}, {{instance.getBonesTransforms(), 0}});
+      drawModel(model, *model.shaders, entity.getTransform(), {}, {{instance.getBonesTransforms(), 0}, {model.bones_offset, 1}});
     }
 
     //Finish loop

@@ -13,7 +13,7 @@ class SSBO : public BaseBuffer<SSBODeleter> {
 public:
   template<typename T>
   void reserve(size_t count){
-    glGenBuffers(1, &id);
+    createBuffer();
     buffer_size = count * sizeof(T);
 
     bind();
@@ -22,6 +22,7 @@ public:
 
   template<typename T>
   void setData(const std::vector<T>& data){
+    createBuffer();
     buffer_size = data.size() * sizeof(T);
 
     bind();
@@ -49,5 +50,12 @@ public:
   }
 
 private:
+  bool exists = false;
   size_t buffer_size = 0;
+
+  void createBuffer(){
+    if(!exists)
+      glGenBuffers(1, &id);
+    exists = true;
+  }
 };

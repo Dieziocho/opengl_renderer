@@ -9,12 +9,11 @@ layout(std140, binding = 0) uniform Camera {
     vec3 camera_position;
 };
 
-struct Bone {
-    mat4 transform;
+layout(std430, binding = 0) readonly buffer BonesTransform {
+    mat4 bones_transform[];
 };
-
-layout(std430, binding = 0) readonly buffer Bones {
-    Bone bones[];
+layout(std430, binding = 1) readonly buffer BonesOffset {
+    mat4 bones_offset[];
 };
 
 uniform mat4 model;
@@ -29,7 +28,8 @@ void main() {
             break;
         }
 
-        mat4 transform = bones[bone_ids[i]].transform;
+        uint index = bone_ids[i];
+        mat4 transform = bones_transform[index] * bones_offset[index];
         total_position += (transform * vec4(position, 1)) * weights[i];
     }
 
