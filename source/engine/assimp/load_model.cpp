@@ -3,6 +3,7 @@
 #include "assimp/postprocess.h"
 #include "assimp/mesh.h"
 #include "assimp/texture.h"
+#include "engine.h"
 #include "model.h"
 #include "shaders.h"
 #include <stdexcept>
@@ -82,7 +83,7 @@ std::shared_ptr<const Texture> loadMaterialTexture(const aiScene& scene, const a
   return texture;
 }
 
-void loadMeshes(Model& model, const aiScene& scene){
+void loadMeshes(Model& model, const aiScene& scene, bool load_bones){
   auto* meshes = scene.mMeshes;
   size_t count = scene.mNumMeshes;
   model.meshes.reserve(scene.mNumMeshes);
@@ -113,9 +114,11 @@ void loadMeshes(Model& model, const aiScene& scene){
         indices.push_back(index);
 
     //Get bone names via mesh reference
-    recollectBoneNames(model, mesh);
     std::vector<BoneData> bone_data(vertices.size());
-    loadVertexBoneweights(model, bone_data, mesh);
+    if(load_bones){
+      recollectBoneNames(model, mesh);
+      loadVertexBoneweights(model, bone_data, mesh);
+    }
 
     //Load texture
     auto texture = loadMaterialTexture(scene, material, textures);
@@ -135,8 +138,9 @@ void loadMeshes(Model& model, const aiScene& scene){
 
     DataBuffer buffer;
     buffer.attach(0, vertices);
-    buffer.attach(2, bone_data);
     buffer.setIndices(indices);
+    if(load_bones)
+      buffer.attach(2, bone_data);
 
     model.meshes.emplace_back(Mesh::FromBuffer(std::move(buffer), texture, flags));
   }
@@ -204,7 +208,6 @@ void loadBoneAnimations(Model& model, const aiAnimation& ai_animation){
 }
 
 void loadAnimations(Model& model, const aiScene& scene){
-  if(!scene.HasAnimations()) return;
   model.flags |= MODEL_HAS_ANIMATIONS;
 
   for(auto& animation : std::span(scene.mAnimations, scene.mNumAnimations))
@@ -239,7 +242,7 @@ unsigned loadBones(Model& model, const aiScene& scene){
   return -1;
 }
 
-Model Assimp::loadModel(const Path& file_path, unsigned){
+Model Assimp::loadModel(const Path& file_path, unsigned flags){
   if(!exists(file_path)) throw std::runtime_error(file_path.string() + ": does not exist");
 
   importer.SetPropertyInteger(
@@ -266,10 +269,13 @@ Model Assimp::loadModel(const Path& file_path, unsigned){
     file_path.extension() == ".fbx" ?
     glm::scale(glm::mat4(1), glm::vec3(1) * 0.01f) : 1;
 
+  bool load_animations = scene->HasAnimations() & !(flags & IGNORE_ANIMATIONS);
+
   Model model;
-  loadMeshes(model, *scene);
+  loadMeshes(model, *scene, load_animations);
   loadInstances(model, scene->mRootNode, input_transform);
-  loadAnimations(model, *scene);
+  if(load_animations)
+    loadAnimations(model, *scene);
 
   model.shaders = model.flags & MODEL_HAS_ANIMATIONS ?
                   &Shaders::animated_3d :

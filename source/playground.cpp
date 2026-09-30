@@ -1,13 +1,12 @@
 #include "engine.h"
 
-Entity* helios;
-
 void setups(){
-  const Model& model = Engine::getModel("resources/Helios/helios.fbx");
-  helios = &Engine::createEntity(model);
-  helios->playAnimation("Hi");
+  const Model& model = Engine::getModel("resources/Helios/helios.fbx", IGNORE_ANIMATIONS);
+  for(unsigned i = 0; i < 1000; ++i){
+    auto* entity = &Engine::createEntity(model);
+    entity->translate({0,i,0});
+  }
 }
 
 void onFrame(){
-  helios->translate({0,0.001,0});
 }

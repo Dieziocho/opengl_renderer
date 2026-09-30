@@ -7,10 +7,12 @@ class ModelInstance {
 public:
   ModelInstance() = default;
   ModelInstance(const Model& model) : model(&model), animator(model){
-    copyModelBoneStates();
-    size_t bone_count = model.bones.size();
-    bones_transforms.reserve<glm::mat4>(bone_count);
-    updateBones();
+    if(model.flags & MODEL_HAS_ANIMATIONS){
+      copyModelBoneStates();
+      size_t bone_count = model.bones.size();
+      bones_transforms.reserve<glm::mat4>(bone_count);
+      updateBones();
+    }
   }
 
   void playAnimation(const char* name){
@@ -41,13 +43,13 @@ private:
   Animator animator;
 
   void updateBones(){
-    size_t bone_count = model->bones.size();
-    if(!bone_count) return;
-    std::vector<glm::mat4> result(bone_count);
-    updateBones(result, model->root_id);
-    bones_transforms.subData(result);
-    bones_transforms.bind();
-    bones_transforms.bindBase(0);
+    if(model->flags & MODEL_HAS_ANIMATIONS){
+      std::vector<glm::mat4> result(model->bones.size());
+      updateBones(result, model->root_id);
+      bones_transforms.subData(result);
+      bones_transforms.bind();
+      bones_transforms.bindBase(0);
+    }
   }
 
   void updateBones(std::vector<glm::mat4>& output, unsigned id, const glm::mat4& parent = 1){
