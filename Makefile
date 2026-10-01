@@ -26,7 +26,7 @@ run: $(TARGET)
 	./$(TARGET)
 
 clear:
-	@rm -rf $(BUILD_DIR) target
+	@rm -rf $(BUILD_DIR) $(TARGET_DIR)
 
 CXX := ccache g++
 
