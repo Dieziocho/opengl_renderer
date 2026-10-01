@@ -15,7 +15,6 @@ build-windows:
 	$(MAKE) -j$(nproc) \
 		TARGET=target/windows/output.exe \
 		CXX="ccache x86_64-w64-mingw32-g++" \
-		CXX_FLAGS='-g -O0 -Wall -Wextra -pedantic -std=c++26 -MMD -MP -I $(INCLUDE_DIR)' \
 		LD_FLAGS='-Llibs/windows -lglfw3dll -lopengl32 -lassimp' \
 		BUILD_DIR='build/windows' \
 		TARGET_DIR='target/windows' \
@@ -26,7 +25,7 @@ run: $(TARGET)
 	./$(TARGET)
 
 clear:
-	@rm -rf $(BUILD_DIR) $(TARGET_DIR)
+	@rm -rf build target
 
 CXX := ccache g++
 
