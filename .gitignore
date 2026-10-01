@@ -12,3 +12,4 @@ source/include/assimp
 source/include/glad
 source/include/glm
 source/include/stb_image.h
+source/include/GLFW

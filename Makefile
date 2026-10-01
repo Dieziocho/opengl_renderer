@@ -1,14 +1,26 @@
 SOURCE_DIR := source
 INCLUDE_DIR := source/include
-BUILD_DIR := build
-TARGET_DIR := target
+BUILD_DIR := build/linux
+TARGET_DIR := target/linux
+LIBS_DIR := libs
 
-TARGET := target/output
+TARGET := target/linux/output
 
 .PHONY: all build run
 all: build run
 build:
 	$(MAKE) -j$(nproc) $(TARGET)
+
+build-windows:
+	$(MAKE) -j$(nproc) \
+		TARGET=target/windows/output.exe \
+		CXX="ccache x86_64-w64-mingw32-g++" \
+		CXX_FLAGS='-g -O0 -Wall -Wextra -pedantic -std=c++26 -MMD -MP -I $(INCLUDE_DIR)' \
+		LD_FLAGS='-Llibs/windows -lglfw3dll -lopengl32 -lassimp' \
+		BUILD_DIR='build/windows' \
+		TARGET_DIR='target/windows' \
+		target/windows/output.exe
+	cp $(LIBS_DIR)/windows/*.dll target/windows
 
 run: $(TARGET)
 	./$(TARGET)

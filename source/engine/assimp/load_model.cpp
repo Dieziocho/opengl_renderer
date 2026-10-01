@@ -157,7 +157,7 @@ void loadInstances(Model& model, const aiNode* node, glm::mat4 transform = glm::
     loadInstances(model, node->mChildren[i], transform);
 }
 
-void loadBoneMatrices(Model& model, unsigned bone_id, const aiBone& ai_bone, const aiNode& node){
+void loadBoneMatrices(Model& model, unsigned bone_id, const aiNode& node){
   auto& bone = model.bones[bone_id];
 
   glm::vec3 position;
@@ -223,7 +223,7 @@ unsigned loadBones(Model& model, const aiScene& scene){
     if(!bone || !node) continue;
 
     bone_offsets[bone_id] = Assimp::convertMat4(bone->mOffsetMatrix);
-    loadBoneMatrices(model, bone_id, *bone, *node);
+    loadBoneMatrices(model, bone_id, *node);
     for(unsigned i = 0; i < node->mNumChildren; ++i){
       std::string child_name = node->mChildren[i]->mName.C_Str();
 
@@ -259,7 +259,7 @@ Model Assimp::loadModel(const Path& file_path, unsigned flags){
 
   //Load file
   const aiScene* scene = importer.ReadFile(
-    file_path,
+    file_path.string(),
     aiProcess_RemoveComponent | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_ImproveCacheLocality | aiProcess_SortByPType |
     aiProcess_RemoveRedundantMaterials | aiProcess_FindInstances | aiProcess_EmbedTextures
     );
